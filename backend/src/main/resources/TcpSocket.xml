@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">-->
+  <beans>
+    <bean id="javaSerializer"
+      class="org.springframework.core.serializer.DefaultSerializer" />
+
+    <bean id="javaDeserializer"
+    class="org.springframework.core.serializer.DefaultDeserializer" />
+
+    <bean id="failCF" class="o.s.i.ip.tcp.connection.FailoverClientConnectionFactory">
+      <constructor-arg>
+        <list>
+          <ref bean="clientFactory1"/>
+          <ref bean="clientFactory2"/>
+        </list>
+      </constructor-arg>
+    </bean>
+  </beans>
