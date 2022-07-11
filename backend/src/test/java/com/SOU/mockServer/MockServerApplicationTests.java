@@ -1,47 +1,37 @@
 package com.SOU.mockServer;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.util.Arrays;
 import javax.net.SocketFactory;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.integration.core.MessagingTemplate;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageChannel;
 
 @SpringBootTest
 class MockServerApplicationTests {
-	private static final Logger LOGGER = LoggerFactory.getLogger(MockServerApplicationTests.class);
 
-	//server host, port
-	private static final String HOST = "localhost";
-	private static final int PORT = 1234;
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockServerApplicationTests.class);
 
-	public static void main(String[] args) throws Exception {
+    //server host, port
+    private static final String HOST = "localhost";
+    private static final int PORT = 1234;
 
-		String DATA = "hello_from_client";
-		LOGGER.info("Sending request to {}:{}", HOST, PORT);
-		// create client socket && connect server socket
-		Socket socket = SocketFactory.getDefault().createSocket(HOST, PORT);
+    public static void main(String[] args) throws Exception {
 
-		// ByteArrayCrLfSerializer의 message 구분 방식은 \r\n 으로 구분
-		socket.getOutputStream().write((DATA + "\r\n").getBytes());
+        String DATA = "hello_from_client";
+        LOGGER.info("Sending request to {}:{}", HOST, PORT);
+        // create client socket && connect server socket
+        Socket socket = SocketFactory.getDefault().createSocket(HOST, PORT);
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		String response = reader.readLine();
-		LOGGER.info("Received response: {}", response);
-	}
+        // ByteArrayCrLfSerializer의 message 구분 방식은 \r\n 으로 구분
+        socket.getOutputStream().write((DATA + "\r\n").getBytes());
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String response = reader.readLine();
+        LOGGER.info("Received response: {}", response);
+    }
 
 //	@Test
 //	void test_send_sensor_status() throws IOException {
@@ -63,9 +53,9 @@ class MockServerApplicationTests {
 //		socket.close();
 //	}
 
-	@Test
-	void contextLoads() {
-
-	}
-
+//    @Test
+//    void contextLoads() {
+//
+//    }
+//
 }

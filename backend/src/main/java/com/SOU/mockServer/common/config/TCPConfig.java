@@ -1,4 +1,4 @@
-package com.SOU.mockServer.config;
+package com.SOU.mockServer.common.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

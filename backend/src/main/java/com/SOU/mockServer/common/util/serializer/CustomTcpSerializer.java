@@ -1,4 +1,4 @@
-package com.SOU.mockServer.serializer;
+package com.SOU.mockServer.common.util.serializer;
 
 import java.io.IOException;
 import java.io.InputStream;
