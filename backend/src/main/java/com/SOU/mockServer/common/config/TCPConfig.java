@@ -17,6 +17,7 @@ import org.springframework.integration.ip.tcp.connection.ThreadAffinityClientCon
 import org.springframework.integration.ip.tcp.serializer.ByteArrayCrLfSerializer;
 import org.springframework.messaging.MessageChannel;
 
+//
 @EnableIntegration
 // search for @messagingGateway interface
 @IntegrationComponentScan
@@ -59,7 +60,7 @@ public class TCPConfig {
     // clientConnectionFactory를 사용하여 channel을 통해 message를 전송함,
     // reply message를 수신하면,
     @Bean
-    @ServiceActivator(inputChannel = "toTcp")
+    @ServiceActivator(inputChannel = "fromTcp")
     public TcpOutboundGateway tcpOutGate() {
         TcpOutboundGateway outGate = new TcpOutboundGateway();
         outGate.setConnectionFactory(clientConnectionFactory());
@@ -71,7 +72,6 @@ public class TCPConfig {
     server client factory 사용하여 message 수신
     1. 전달받는 payload로 message를 구성한 후에, requestChannel에 message를 전송
     2. response message를 수신하면, response message로부터 payload를 connection으로 전송
-
      */
     @Bean
     public TcpInboundGateway tcpInGate() {
