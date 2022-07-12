@@ -15,10 +15,34 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-integration'
 	implementation 'org.springframework.integration:spring-integration-ip:5.5.12'
+
+
     implementation 'org.projectlombok:lombok:1.18.20'
+	annotationProcessor 'org.projectlombok:lombok:1.18.20'
+
+	// log
+//	implementation 'ch.qos.logback:logback-classic:1.2.3'
+//	implementation 'ch.qos.logback.contrib:logback-jackson:0.1.5'
+//	implementation 'ch.qos.logback.contrib:logback-json-core:0.1.5'
+//	implementation 'org.slf4j:slf4j-api:1.7.26'
+//	implementation 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
+//	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+//	implementation 'com.fasterxml.jackson.core:jackson-databind:2.1.3'
+
+	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.integration:spring-integration-test'
+}
+
+configurations.all {
+	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+	resolutionStrategy.eachDependency {
+		details ->
+			if (details.requested.group == 'org.apache.logging.log4j'){
+				details.useVersion("2.17.2")
+			}
+	}
 }
 
 tasks.named('test') {

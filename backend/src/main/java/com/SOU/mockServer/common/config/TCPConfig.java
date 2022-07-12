@@ -1,5 +1,8 @@
 package com.SOU.mockServer.common.config;
 
+import com.SOU.mockServer.common.util.bytes.BytesConverter;
+import com.SOU.mockServer.external.serialize.OnlineMessageDeserializer;
+import com.SOU.mockServer.external.serialize.OnlineMessageSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +17,6 @@ import org.springframework.integration.ip.tcp.connection.AbstractServerConnectio
 import org.springframework.integration.ip.tcp.connection.TcpNetClientConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.TcpNetServerConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.ThreadAffinityClientConnectionFactory;
-import org.springframework.integration.ip.tcp.serializer.ByteArrayCrLfSerializer;
 import org.springframework.messaging.MessageChannel;
 
 //
@@ -24,20 +26,27 @@ import org.springframework.messaging.MessageChannel;
 @Configuration
 public class TCPConfig {
 
+    private final boolean treatTimeoutAsEndOfMessage = true;
+    private final int maxMessageSize = 10000;
+    private final int lengthHeaderSize = 10000;
     @Value("${tcp.server.port}")
     private int port;
-
     @Value("${tcp.server.host}")
     private String host;
 
-
     @Bean
     public AbstractClientConnectionFactory clientConnectionFactory() {
-        TcpNetClientConnectionFactory clientCF = new TcpNetClientConnectionFactory(this.host, this.port);
-        clientCF.setSerializer(new ByteArrayCrLfSerializer());
-        clientCF.setDeserializer(new ByteArrayCrLfSerializer());
-        // thread가 message를 보낼 때 마다 동일한 연결을 재사용.
+
+        TcpNetClientConnectionFactory clientCF = new TcpNetClientConnectionFactory(this.host,
+            this.port);
+        clientCF.setSerializer(
+            new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
+                treatTimeoutAsEndOfMessage));
+        // thread가 message를 보낼 때 마다 새로운 연결을 생성하는 설정(singleUse)
+        // 높은 처리량을 제공 -> 매번 새로운 연결 생성에 따른 오버헤드 증가
         clientCF.setSingleUse(true);
+        // connection 당 reply 대기시간으로, default는 10000(10 sec)
+//        clientCF.setSoTimeout(1000);
         return clientCF;
     }
 
@@ -46,17 +55,6 @@ public class TCPConfig {
         return new ThreadAffinityClientConnectionFactory(clientConnectionFactory());
     }
 
-//    @Bean
-//    public FailoverClientConnectionFactory failoverClientConnectionFactory() {
-//        List<AbstractClientConnectionFactory> listClientConnectionFactory = new LinkedList<>();
-//        listClientConnectionFactory.add(clientConnectionFactory());
-//        listClientConnectionFactory.add(clientConnectionFactory());
-//        FailoverClientConnectionFactory failoverClientConnectionFactory = new FailoverClientConnectionFactory(
-//            listClientConnectionFactory);
-//        failoverClientConnectionFactory.setCloseOnRefresh(false);
-//        return new FailoverClientConnectionFactory(listClientConnectionFactory);
-//    }
-
     // clientConnectionFactory를 사용하여 channel을 통해 message를 전송함,
     // reply message를 수신하면,
     @Bean
@@ -64,7 +62,7 @@ public class TCPConfig {
     public TcpOutboundGateway tcpOutGate() {
         TcpOutboundGateway outGate = new TcpOutboundGateway();
         outGate.setConnectionFactory(clientConnectionFactory());
-        outGate.setOutputChannelName("resultToString");
+//        outGate.setOutputChannelName("resultToString");
         return outGate;
     }
 
@@ -83,11 +81,12 @@ public class TCPConfig {
 
     @Bean
     public AbstractServerConnectionFactory serverConnectionFactory() {
-        TcpNetServerConnectionFactory serverCf = new TcpNetServerConnectionFactory(this.port);
-        serverCf.setSerializer(new ByteArrayCrLfSerializer());
-        serverCf.setDeserializer(new ByteArrayCrLfSerializer());
-        serverCf.setSoTcpNoDelay(true);
-        serverCf.setSoKeepAlive(true);
+        TcpNetServerConnectionFactory serverCF = new TcpNetServerConnectionFactory(this.port);
+        serverCF.setDeserializer(
+            new OnlineMessageDeserializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
+                treatTimeoutAsEndOfMessage));
+        serverCF.setSoTcpNoDelay(true);
+        serverCF.setSoKeepAlive(true);
         return new TcpNetServerConnectionFactory(this.port);
     }
 
@@ -95,11 +94,5 @@ public class TCPConfig {
     public MessageChannel fromTcp() {
         return new DirectChannel();
     }
-
-//    @MessagingGateway(defaultRequestChannel = "toTcp")
-//    public interface Gateway {
-//
-//        String viaTcp(String in);
-//    }
 
 }

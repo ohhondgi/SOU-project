@@ -2,9 +2,9 @@ package com.SOU.mockServer.external.message.common;
 
 import com.SOU.mockServer.common.message.Field;
 import com.SOU.mockServer.common.message.Message;
+import com.SOU.mockServer.common.util.DateUtil;
 import com.SOU.mockServer.common.util.Input;
 import com.SOU.mockServer.common.util.Output;
-import com.lucentblock.sou.common.util.DateUtil;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.Getter;

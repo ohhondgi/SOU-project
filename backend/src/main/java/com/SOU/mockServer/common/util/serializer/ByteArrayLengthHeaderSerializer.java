@@ -13,15 +13,17 @@ import lombok.extern.slf4j.Slf4j;
  * length value = n bytes numeric characters. including length field + body part
  */
 @Slf4j
+//public class ByteArrayLengthHeaderSerializer
+//        implements Serializer<byte[], OutputStream>, Deserializer<byte[], InputStream> {
 public class ByteArrayLengthHeaderSerializer
         implements Serializer<byte[], OutputStream>, Deserializer<byte[], InputStream> {
 
   private static final int SIZE_LENGTH_HEADER = 4; // size of length header
 
   private final boolean treatTimeoutAsEndOfMessage;
-  private final int maxMessageSize;
-  private final int lengthHeaderSize;
-  private final BytesConverter bytesConverter;
+  public final int maxMessageSize;
+  public final int lengthHeaderSize;
+  public final BytesConverter bytesConverter;
 
   public ByteArrayLengthHeaderSerializer(int maxMessageSize) {
     this(maxMessageSize, SIZE_LENGTH_HEADER, new BytesConverter(), false);
