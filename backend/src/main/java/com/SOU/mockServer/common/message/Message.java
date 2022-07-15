@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public abstract class Message {
+public abstract class Message{
     private final List<Field> fields;
     public Message() {
         this.fields = new LinkedList<>();
@@ -18,6 +18,14 @@ public abstract class Message {
      */
     protected void addField(Field field) {
         this.fields.add(field);
+    }
+
+    public int getTotalFieldLengthSize() {
+        int size = 0;
+        for (Field field: this.fields){
+            size += field.length;
+        }
+        return size;
     }
 
     public void writeTo(Output out, int offset)
@@ -41,8 +49,9 @@ public abstract class Message {
 
     public void readFrom(Input input, int offset)
         throws UnsupportedOperationException {
-
+        // remove totalLength field
         for (Field field : this.fields) {
+
             if (field.value instanceof Integer) {
                 field.value = input.readInt(offset, field.length);
             } else if (field.value instanceof Long) {

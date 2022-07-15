@@ -11,7 +11,8 @@ import lombok.Getter;
 
 public class CommonFieldMessage extends Message {
 
-    public static final int LENGTH_TOTAL = 96;
+    public static final int LENGTH_TOTAL = 100;
+    private static final int LENGTH_TOTAL_FIELD = 4;
     private static final int LENGTH_SENDER_CODE = 3;
     private static final int LENGTH_RECEIVER_CODE = 3;
     private static final int LENGTH_TRAN_DATE = 8;
@@ -21,6 +22,9 @@ public class CommonFieldMessage extends Message {
     private static final int LENGTH_TRAN_TYPE_CODE = 4;
     private static final int LENGTH_RESPONSE_CODE = 3;
     private static final int LENGTH_FILLER = 55;
+
+    @Getter
+    private final Field<Integer> totalLength;
     @Getter
     private final Field<Integer> senderCode;
     @Getter
@@ -41,6 +45,7 @@ public class CommonFieldMessage extends Message {
     private final Field<String> filler;
 
     public CommonFieldMessage() {
+        this.totalLength = new Field<>(LENGTH_TOTAL_FIELD, LENGTH_TOTAL);
         this.senderCode = new Field<>(LENGTH_SENDER_CODE, 0);
         this.receiverCode = new Field<>(LENGTH_RECEIVER_CODE, 0);
         this.tranDate = new Field<>(LENGTH_TRAN_DATE, DateUtil.format(DateUtil.nowDate()));
@@ -51,6 +56,7 @@ public class CommonFieldMessage extends Message {
         this.responseCode = new Field<>(LENGTH_RESPONSE_CODE, "");
         this.filler = new Field<>(LENGTH_FILLER, "");
 
+        addField(this.totalLength);
         addField(this.senderCode);
         addField(this.receiverCode);
         addField(this.tranDate);
@@ -62,10 +68,37 @@ public class CommonFieldMessage extends Message {
         addField(this.filler);
     }
 
+    public CommonFieldMessage(int senderCode, int reveiverCode, String bankTranId, String messageCategoryCode,
+        String tranTypeCode, String responseCode, String filter) {
+        this.totalLength = new Field<>(LENGTH_TOTAL_FIELD, LENGTH_TOTAL);
+        this.senderCode = new Field<>(LENGTH_SENDER_CODE, senderCode);
+        this.receiverCode = new Field<>(LENGTH_RECEIVER_CODE, reveiverCode);
+        this.tranDate = new Field<>(LENGTH_TRAN_DATE, DateUtil.format(DateUtil.nowDate()));
+        this.tranTime = new Field<>(LENGTH_TRAN_TIME, DateUtil.format(DateUtil.nowTime()));
+        this.bankTranId = new Field<>(LENGTH_BANK_TRAN_ID, bankTranId);
+        this.messageCategoryCode = new Field<>(LENGTH_MESSAGE_CATEGORY_CODE, messageCategoryCode);
+        this.tranTypeCode = new Field<>(LENGTH_TRAN_TYPE_CODE, tranTypeCode);
+        this.responseCode = new Field<>(LENGTH_RESPONSE_CODE, responseCode);
+        this.filler = new Field<>(LENGTH_FILLER, filter);
+
+        addField(this.totalLength);
+        addField(this.senderCode);
+        addField(this.receiverCode);
+        addField(this.tranDate);
+        addField(this.tranTime);
+        addField(this.bankTranId);
+        addField(this.messageCategoryCode);
+        addField(this.tranTypeCode);
+        addField(this.responseCode);
+        addField(this.filler);
+    }
+
+
     @Override
     public Object clone() {
         CommonFieldMessage message = new CommonFieldMessage();
 
+        message.totalLength.set(totalLength.get());
         message.senderCode.set(senderCode.get());
         message.receiverCode.set(receiverCode.get());
         message.tranDate.set(tranDate.get());
@@ -86,6 +119,7 @@ public class CommonFieldMessage extends Message {
     @Override
     public Map<String, Object> toMap() {
         Map<String, Object> map = new LinkedHashMap<>();
+        map.put("totalLength", totalLength.get());
         map.put("senderCode", senderCode.get());
         map.put("receiverCode", receiverCode.get());
         map.put("tranDate", tranDate.get());
@@ -111,6 +145,7 @@ public class CommonFieldMessage extends Message {
     @Override
     public String toString() {
         return "CommonFieldMessage{" +
+            "totalLength=" + totalLength.get() +
             "senderCode=" + senderCode.get() +
             ", receiverCode=" + receiverCode.get() +
             ", tranDate=" + tranDate.get() +

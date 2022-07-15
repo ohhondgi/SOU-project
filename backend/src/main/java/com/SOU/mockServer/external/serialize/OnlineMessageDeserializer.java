@@ -6,6 +6,7 @@ import com.SOU.mockServer.common.util.bytes.ByteArrayInput;
 import com.SOU.mockServer.common.util.bytes.BytesConverter;
 import com.SOU.mockServer.external.message.BankTranTypeCode;
 import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
+import com.SOU.mockServer.external.message.common.CommonFieldMessage;
 import com.sun.jdi.connect.spi.ClosedConnectionException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +22,7 @@ import org.springframework.core.serializer.Deserializer;
 public class OnlineMessageDeserializer implements Deserializer<Message> {
 
     private static final int SIZE_LENGTH_HEADER = 4; // size of length header
-    private static final int OFFSET_BANK_TRAN_TYPE_CODE = 34;
+    private static final int OFFSET_BANK_TRAN_TYPE_CODE = 38;
     private static final int LENGTH_BANK_TRAN_TYPE_CODE = 4;
     private final boolean treatTimeoutAsEndOfMessage;
     private final int maxMessageSize;
@@ -78,10 +79,18 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
             case BankTranTypeCode.CONNECTION_READY_CLOSE:
             case BankTranTypeCode.CONNECTION_SYSTEM_FAILURE:
             case BankTranTypeCode.CONNECTION_TEST_CALL:
+                // connection code
+                message = new CommonFieldMessage();
+                message.readFrom(in);
+                break;
             case BankTranTypeCode.INDIVIDUAL_WITHDRAWAL:
                 message = new NotificationIndividualWithdrawalMessage();
                 message.readFrom(in);
                 break;
+            default:
+                // cannot find matched BankTranTypeCode
+                log.error("Failed to deserialize inputStream to Message: " +
+                    "Cannot find matched BankTranTypeCode = " + bankTranTypeCode);
 //            case BankTranTypeCode.CONNECTION_SYSTEM_FAILURE_RECOVERY:
 //                message = new ConnectionStateMessage();
 //                message.readFrom(in);
@@ -158,12 +167,7 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
 //                message = new ProductScheduleMessage();
 //                message.readFrom(in);
 //                break;
-            default:
-                // cannot find matched BankTranTypeCode
-                log.error("Failed to deserialize inputStream to Message: " +
-                    "Cannot find matched BankTranTypeCode = " + bankTranTypeCode);
         }
-
         return message;
     }
 
@@ -184,9 +188,9 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
 
     public byte[] doDeserialize(InputStream inputStream) throws IOException {
         // header read
-        int totalLength = readLengthHeader(inputStream);
-        int messageLength = totalLength - lengthHeaderSize; // header inclusive
-        byte[] bodyPart = null;
+//        int totalLength = readLengthHeader(inputStream);
+//        int messageLength = totalLength - lengthHeaderSize; // header inclusive
+//        byte[] bodyPart = null;
 
 //    if (totalLength < lengthHeaderSize) {
 //      throw new IllegalLengthHeaderException("Illegal Message length = " + totalLength
@@ -198,22 +202,43 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
 //              " exceeds max message length = " + maxMessageSize);
 //    }
 
-        bodyPart = new byte[messageLength];
-        read(inputStream, bodyPart);
+//        bodyPart = new byte[totalLength];
+        byte[] message = read(inputStream);
 
-        log.info("bytes length = {}, bytes read = {}", totalLength,
-            bytesConverter.toString(bodyPart));
-
-        return bodyPart;
+        log.info("bytes length = {}, bytes read = {}", message.length,
+            bytesConverter.toString(message));
+        return message;
     }
 
-    private int read(InputStream inputStream, byte[] bytes)
+//    private int readLengthHeader(InputStream inputStream) throws IOException {
+//        byte[] lengthPart = new byte[lengthHeaderSize];
+//        read(inputStream, lengthPart);
+//        int length = -1;
+//
+//        try {
+//            length = bytesConverter.toInt(lengthPart);
+//        } catch (IllegalArgumentException ignored) {
+//            // ignored. just return -1
+//        }
+//
+//        return length;
+//    }
+
+    private byte[] read(InputStream inputStream)
         throws IOException {
-        int lengthRead = 0;
-        int needed = bytes.length;
+        int lengthRead = lengthHeaderSize;
+
+        byte[] header = new byte[lengthHeaderSize];
+        inputStream.read(header, 0, header.length);
+        int bodysize = bytesConverter.toInt(header);
+
+        byte[] message = new byte[bodysize];
+        System.arraycopy(header,0,message,0,header.length);
+
+        int needed = message.length;
         while (lengthRead < needed) {
             int len;
-            len = inputStream.read(bytes, lengthRead, needed - lengthRead);
+            len = inputStream.read(message, lengthRead, needed - lengthRead);
 
             if (len < 0) {
                 throw new ClosedConnectionException(
@@ -222,22 +247,8 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
 
             lengthRead += len;
         }
-        return 0;
+        return message;
     }
 
-
-    private int readLengthHeader(InputStream inputStream) throws IOException {
-        byte[] lengthPart = new byte[lengthHeaderSize];
-        read(inputStream, lengthPart);
-        int length = -1;
-
-        try {
-            length = bytesConverter.toInt(lengthPart);
-        } catch (IllegalArgumentException ignored) {
-            // ignored. just return -1
-        }
-
-        return length;
-    }
 
 }
