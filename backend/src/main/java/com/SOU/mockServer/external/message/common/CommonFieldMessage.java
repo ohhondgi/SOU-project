@@ -24,7 +24,7 @@ public class CommonFieldMessage extends Message {
     private static final int LENGTH_FILLER = 55;
 
     @Getter
-    private final Field<Integer> totalLength;
+    private final Field<Integer> totalMessageLength;
     @Getter
     private final Field<Integer> senderCode;
     @Getter
@@ -45,7 +45,7 @@ public class CommonFieldMessage extends Message {
     private final Field<String> filler;
 
     public CommonFieldMessage() {
-        this.totalLength = new Field<>(LENGTH_TOTAL_FIELD, LENGTH_TOTAL);
+        this.totalMessageLength = new Field<>(LENGTH_TOTAL_FIELD, LENGTH_TOTAL);
         this.senderCode = new Field<>(LENGTH_SENDER_CODE, 0);
         this.receiverCode = new Field<>(LENGTH_RECEIVER_CODE, 0);
         this.tranDate = new Field<>(LENGTH_TRAN_DATE, DateUtil.format(DateUtil.nowDate()));
@@ -56,7 +56,7 @@ public class CommonFieldMessage extends Message {
         this.responseCode = new Field<>(LENGTH_RESPONSE_CODE, "");
         this.filler = new Field<>(LENGTH_FILLER, "");
 
-        addField(this.totalLength);
+        addField(this.totalMessageLength);
         addField(this.senderCode);
         addField(this.receiverCode);
         addField(this.tranDate);
@@ -70,7 +70,7 @@ public class CommonFieldMessage extends Message {
 
     public CommonFieldMessage(int senderCode, int reveiverCode, String bankTranId, String messageCategoryCode,
         String tranTypeCode, String responseCode, String filter) {
-        this.totalLength = new Field<>(LENGTH_TOTAL_FIELD, LENGTH_TOTAL);
+        this.totalMessageLength = new Field<>(LENGTH_TOTAL_FIELD, getTotalLength());
         this.senderCode = new Field<>(LENGTH_SENDER_CODE, senderCode);
         this.receiverCode = new Field<>(LENGTH_RECEIVER_CODE, reveiverCode);
         this.tranDate = new Field<>(LENGTH_TRAN_DATE, DateUtil.format(DateUtil.nowDate()));
@@ -81,7 +81,7 @@ public class CommonFieldMessage extends Message {
         this.responseCode = new Field<>(LENGTH_RESPONSE_CODE, responseCode);
         this.filler = new Field<>(LENGTH_FILLER, filter);
 
-        addField(this.totalLength);
+        addField(this.totalMessageLength);
         addField(this.senderCode);
         addField(this.receiverCode);
         addField(this.tranDate);
@@ -98,7 +98,7 @@ public class CommonFieldMessage extends Message {
     public Object clone() {
         CommonFieldMessage message = new CommonFieldMessage();
 
-        message.totalLength.set(totalLength.get());
+        message.totalMessageLength.set(totalMessageLength.get());
         message.senderCode.set(senderCode.get());
         message.receiverCode.set(receiverCode.get());
         message.tranDate.set(tranDate.get());
@@ -119,7 +119,7 @@ public class CommonFieldMessage extends Message {
     @Override
     public Map<String, Object> toMap() {
         Map<String, Object> map = new LinkedHashMap<>();
-        map.put("totalLength", totalLength.get());
+        map.put("totalMessageLength", totalMessageLength.get());
         map.put("senderCode", senderCode.get());
         map.put("receiverCode", receiverCode.get());
         map.put("tranDate", tranDate.get());
@@ -145,7 +145,7 @@ public class CommonFieldMessage extends Message {
     @Override
     public String toString() {
         return "CommonFieldMessage{" +
-            "totalLength=" + totalLength.get() +
+            "totalLength=" + totalMessageLength.get() +
             "senderCode=" + senderCode.get() +
             ", receiverCode=" + receiverCode.get() +
             ", tranDate=" + tranDate.get() +

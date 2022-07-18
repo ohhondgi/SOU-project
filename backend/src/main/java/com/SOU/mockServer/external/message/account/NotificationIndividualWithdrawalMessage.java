@@ -44,6 +44,43 @@ public class NotificationIndividualWithdrawalMessage extends Message {
 
   public NotificationIndividualWithdrawalMessage() {
     this.commonFieldMessage = new CommonFieldMessage();
+    this.commonFieldMessage.getTotalMessageLength().set(getTotalLength());
+
+    this.stockAccountNumber = new Field<>(LENGTH_STOCK_ACCOUNT_NUMBER, "");
+    this.availableAmount = new Field<>(LENGTH_AVAILABLE_AMOUNT, 0L);
+    this.requestedAmount = new Field<>(LENGTH_REQUESTED_AMOUNT, 0L);
+    this.transferFee = new Field<>(LENGTH_TRANSFER_FEE, 0);
+    this.receiverBankCode = new Field<>(LENGTH_RECEIVER_CODE, 0);
+    this.receiverBankAccountNumber = new Field<>(LENGTH_RECEIVER_ACCOUNT_NUMBER, "");
+    this.depositText = new Field<>(LENGTH_DEPOSIT_TEXT, "");
+    this.withdrawalText = new Field<>(LENGTH_WITHDRAWAL_TEXT, "");
+    this.memberCompanyTranDate = new Field<>(LENGTH_MEMBER_COMPANY_TRAN_DATE, 0);
+    this.memberCompanyAccountNumber = new Field<>(LENGTH_MEMBER_COMPANY_ACCOUNT_NUMBER, "");
+    this.memberCompanyTranId = new Field<>(LENGTH_MEMBER_COMPANY_TRAN_ID, 0);
+    this.memberCompanyCancelTranId = new Field<>(LENGTH_MEMBER_COMPANY_CANCEL_TRAN_ID, 0);
+    this.handleType = new Field<>(LENGTH_HANDLE_TYPE, 0);
+    this.filler = new Field<>(LENGTH_FILLER, "");
+
+    addField(this.stockAccountNumber);
+    addField(this.availableAmount);
+    addField(this.requestedAmount);
+    addField(this.transferFee);
+    addField(this.receiverBankCode);
+    addField(this.receiverBankAccountNumber);
+    addField(this.depositText);
+    addField(this.withdrawalText);
+    addField(this.memberCompanyTranDate);
+    addField(this.memberCompanyAccountNumber);
+    addField(this.memberCompanyTranId);
+    addField(this.memberCompanyCancelTranId);
+    addField(this.handleType);
+    addField(this.filler);
+  }
+  public NotificationIndividualWithdrawalMessage(int senderCode, int reveiverCode, String bankTranId, String messageCategoryCode,
+      String tranTypeCode, String responseCode, String filter) {
+    this.commonFieldMessage = new CommonFieldMessage(senderCode, reveiverCode, bankTranId, messageCategoryCode,
+        tranTypeCode, responseCode, filter);
+    this.commonFieldMessage.getTotalMessageLength().set(getTotalLength());
 
     this.stockAccountNumber = new Field<>(LENGTH_STOCK_ACCOUNT_NUMBER, "");
     this.availableAmount = new Field<>(LENGTH_AVAILABLE_AMOUNT, 0L);
