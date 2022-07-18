@@ -16,7 +16,6 @@ import org.springframework.integration.ip.tcp.connection.AbstractServerConnectio
 import org.springframework.integration.ip.tcp.connection.TcpNetServerConnectionFactory;
 import org.springframework.messaging.MessageChannel;
 
-//
 @EnableIntegration
 // search for @messagingGateway interface
 @IntegrationComponentScan
@@ -77,6 +76,7 @@ public class TCPConfig {
         serverCF.setSerializer(
             new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage));
+        // message를 수신하고 응답할 때마다 새로운 연결을 생성하는 설정(singleUse=ture)
         serverCF.setSingleUse(true);
         serverCF.setSoTcpNoDelay(true);
         serverCF.setSoKeepAlive(true);
@@ -90,7 +90,6 @@ public class TCPConfig {
     2. response message를 수신하면, response message로부터 payload를 connection으로 전송
      */
     @Bean
-//    @ServiceActivator(outputChannel = "toTcp")
     public TcpInboundGateway tcpInGate() {
         TcpInboundGateway inGate = new TcpInboundGateway();
         inGate.setConnectionFactory(serverConnectionFactory());
@@ -102,10 +101,15 @@ public class TCPConfig {
     @Bean
     public MessageChannel inboundChannel() {
         DirectChannel channel = new DirectChannel();
-        channel.setDatatypes(CommonFieldMessage.class,
-            NotificationIndividualWithdrawalMessage.class);
-        return new DirectChannel();
+        // 특정 type에 대한 data만 허용
+//        channel.setDatatypes(CommonFieldMessage.class,
+//            NotificationIndividualWithdrawalMessage.class);
+        return channel;
     }
+
+//    @Bean MessageChannel outboundChannel() {
+//        return new DirectChannel();
+//    }
 
     @Bean
     public MessageChannel replyChannel() {

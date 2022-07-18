@@ -16,12 +16,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-integration'
 	implementation 'org.springframework.integration:spring-integration-ip:5.5.12'
 
+	// web
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 
+	// lombok
     implementation 'org.projectlombok:lombok:1.18.20'
 	annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
 	// log
-//	implementation 'ch.qos.logback:logback-classic:1.2.3'
+//	implementation 'ch.qos.logback:logback-class
 //	implementation 'ch.qos.logback.contrib:logback-jackson:0.1.5'
 //	implementation 'ch.qos.logback.contrib:logback-json-core:0.1.5'
 //	implementation 'org.slf4j:slf4j-api:1.7.26'
@@ -29,9 +32,14 @@ dependencies {
 //	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
 //	implementation 'com.fasterxml.jackson.core:jackson-databind:2.1.3'
 
+	// log
 	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// swagger dependency
+	implementation 'io.springfox:springfox-boot-starter:3.0.0'
+	implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.integration:spring-integration-test'
 }
 
