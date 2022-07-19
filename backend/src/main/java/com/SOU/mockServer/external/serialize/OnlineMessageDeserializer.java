@@ -1,5 +1,7 @@
 package com.SOU.mockServer.external.serialize;
 
+import com.SOU.mockServer.common.exception.ExceededMaxMessageLengthException;
+import com.SOU.mockServer.common.exception.IllegalLengthHeaderException;
 import com.SOU.mockServer.common.message.Message;
 import com.SOU.mockServer.common.util.Input;
 import com.SOU.mockServer.common.util.bytes.ByteArrayInput;
@@ -79,7 +81,7 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
             case BankTranTypeCode.CONNECTION_READY_CLOSE:
             case BankTranTypeCode.CONNECTION_SYSTEM_FAILURE:
             case BankTranTypeCode.CONNECTION_TEST_CALL:
-                // connection code
+                // replacement ConnectionStateMessage
                 message = new CommonFieldMessage();
                 message.readFrom(in);
                 break;
@@ -187,22 +189,6 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
     }
 
     public byte[] doDeserialize(InputStream inputStream) throws IOException {
-        // header read
-//        int totalLength = readLengthHeader(inputStream);
-//        int messageLength = totalLength - lengthHeaderSize; // header inclusive
-//        byte[] bodyPart = null;
-
-//    if (totalLength < lengthHeaderSize) {
-//      throw new IllegalLengthHeaderException("Illegal Message length = " + totalLength
-//              + ". Message length must be greater than lengthHeaderSize = " + lengthHeaderSize);
-//    }
-//
-//    if (messageLength > maxMessageSize) {
-//      throw new ExceededMaxMessageLengthException("Message length " + messageLength +
-//              " exceeds max message length = " + maxMessageSize);
-//    }
-
-//        bodyPart = new byte[totalLength];
         byte[] message = read(inputStream);
 
         log.info("bytes length = {}, bytes read = {}", message.length,
@@ -210,30 +196,11 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
         return message;
     }
 
-//    private int readLengthHeader(InputStream inputStream) throws IOException {
-//        byte[] lengthPart = new byte[lengthHeaderSize];
-//        read(inputStream, lengthPart);
-//        int length = -1;
-//
-//        try {
-//            length = bytesConverter.toInt(lengthPart);
-//        } catch (IllegalArgumentException ignored) {
-//            // ignored. just return -1
-//        }
-//
-//        return length;
-//    }
-
     private byte[] read(InputStream inputStream)
         throws IOException {
+
         int lengthRead = lengthHeaderSize;
-
-        byte[] header = new byte[lengthHeaderSize];
-        inputStream.read(header, 0, header.length);
-        int bodysize = bytesConverter.toInt(header);
-
-        byte[] message = new byte[bodysize];
-        System.arraycopy(header,0,message,0,header.length);
+        byte[] message = readLengthHeader(inputStream);
 
         int needed = message.length;
         while (lengthRead < needed) {
@@ -248,6 +215,33 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
             lengthRead += len;
         }
         return message;
+    }
+
+    private byte[] readLengthHeader(InputStream inputStream) throws IOException {
+        byte[] lengthPart = new byte[lengthHeaderSize];
+        inputStream.read(lengthPart, 0, lengthPart.length);
+        int messageLength = -1;
+
+        try {
+            messageLength = bytesConverter.toInt(lengthPart);
+        } catch (IllegalArgumentException ignored) {
+            // ignored. just return -1
+        }
+
+        if (messageLength < lengthHeaderSize) {
+            throw new IllegalLengthHeaderException("Illegal Message length = " + messageLength
+                + ". Message length must be greater than lengthHeaderSize = " + lengthHeaderSize);
+        }
+
+        if (messageLength > maxMessageSize) {
+          throw new ExceededMaxMessageLengthException("Message length " + messageLength +
+                  " exceeds max message length = " + maxMessageSize);
+        }
+
+        byte[] totalMessage = new byte[messageLength];
+        System.arraycopy(lengthPart,0,totalMessage,0,lengthPart.length);
+
+        return totalMessage;
     }
 
 
