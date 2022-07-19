@@ -42,6 +42,7 @@ public class CommonFieldMessage extends Message {
     @Getter
     private final Field<String> responseCode;
 
+    @Getter
     private final Field<String> filler;
 
     public CommonFieldMessage() {
@@ -68,7 +69,8 @@ public class CommonFieldMessage extends Message {
         addField(this.filler);
     }
 
-    public CommonFieldMessage(int senderCode, int reveiverCode, String bankTranId, String messageCategoryCode,
+    public CommonFieldMessage(int senderCode, int reveiverCode, String bankTranId,
+        String messageCategoryCode,
         String tranTypeCode, String responseCode, String filter) {
         this.totalMessageLength = new Field<>(LENGTH_TOTAL_FIELD, getTotalLength());
         this.senderCode = new Field<>(LENGTH_SENDER_CODE, senderCode);
