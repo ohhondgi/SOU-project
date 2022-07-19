@@ -5,6 +5,9 @@ import lombok.Getter;
 public final class Field<T> {
     @Getter
     final int length;
+
+    // swagger에서 각 Field의 value값 확인을 위해 추가
+    @Getter
     T value;
 
     public Field(int length, T value) {

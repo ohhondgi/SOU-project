@@ -20,14 +20,6 @@ public abstract class Message{
         this.fields.add(field);
     }
 
-    public int getTotalFieldLengthSize() {
-        int size = 0;
-        for (Field field: this.fields){
-            size += field.length;
-        }
-        return size;
-    }
-
     public void writeTo(Output out, int offset)
         throws UnsupportedOperationException {
 
