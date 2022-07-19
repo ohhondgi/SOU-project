@@ -66,8 +66,8 @@ class MockServerApplicationTests {
 //        NotificationIndividualWithdrawalMessage message = new NotificationIndividualWithdrawalMessage();
 //        message.getCommonFieldMessage().getTranTypeCode().set(INDIVIDUAL_WITHDRAWAL);
 
-        NotificationIndividualWithdrawalMessage message = new NotificationIndividualWithdrawalMessage(SENDER_CODE,RECEIVER_CODE,
-            "1234567890",NOTIFICATION_CREATE_INDIVIDUAL_ACCOUNT,INDIVIDUAL_WITHDRAWAL,SUCCESS,"filtertest");
+        NotificationIndividualWithdrawalMessage message = new NotificationIndividualWithdrawalMessage();
+        message.getCommonFieldMessage().getTranTypeCode().set(INDIVIDUAL_WITHDRAWAL);
 
         // when
         ByteArrayOutput outputStream = new ByteArrayOutput(message.getTotalLength());

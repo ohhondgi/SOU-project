@@ -2,6 +2,7 @@ package com.SOU.mockServer.external.message.account;
 
 import com.SOU.mockServer.common.message.Field;
 import com.SOU.mockServer.common.message.Message;
+import com.SOU.mockServer.common.message.NotificationIndividualWithdrawalMessageDto;
 import com.SOU.mockServer.common.util.Input;
 import com.SOU.mockServer.common.util.Output;
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
@@ -76,26 +77,25 @@ public class NotificationIndividualWithdrawalMessage extends Message {
     addField(this.handleType);
     addField(this.filler);
   }
-  public NotificationIndividualWithdrawalMessage(int senderCode, int reveiverCode, String bankTranId, String messageCategoryCode,
-      String tranTypeCode, String responseCode, String filter) {
-    this.commonFieldMessage = new CommonFieldMessage(senderCode, reveiverCode, bankTranId, messageCategoryCode,
-        tranTypeCode, responseCode, filter);
+
+  public NotificationIndividualWithdrawalMessage(CommonFieldMessage commonFieldMessage, NotificationIndividualWithdrawalMessageDto niwmDto) {
+    this.commonFieldMessage = commonFieldMessage;
     this.commonFieldMessage.getTotalMessageLength().set(getTotalLength());
 
-    this.stockAccountNumber = new Field<>(LENGTH_STOCK_ACCOUNT_NUMBER, "");
-    this.availableAmount = new Field<>(LENGTH_AVAILABLE_AMOUNT, 0L);
-    this.requestedAmount = new Field<>(LENGTH_REQUESTED_AMOUNT, 0L);
-    this.transferFee = new Field<>(LENGTH_TRANSFER_FEE, 0);
-    this.receiverBankCode = new Field<>(LENGTH_RECEIVER_CODE, 0);
-    this.receiverBankAccountNumber = new Field<>(LENGTH_RECEIVER_ACCOUNT_NUMBER, "");
-    this.depositText = new Field<>(LENGTH_DEPOSIT_TEXT, "");
-    this.withdrawalText = new Field<>(LENGTH_WITHDRAWAL_TEXT, "");
-    this.memberCompanyTranDate = new Field<>(LENGTH_MEMBER_COMPANY_TRAN_DATE, 0);
-    this.memberCompanyAccountNumber = new Field<>(LENGTH_MEMBER_COMPANY_ACCOUNT_NUMBER, "");
-    this.memberCompanyTranId = new Field<>(LENGTH_MEMBER_COMPANY_TRAN_ID, 0);
-    this.memberCompanyCancelTranId = new Field<>(LENGTH_MEMBER_COMPANY_CANCEL_TRAN_ID, 0);
-    this.handleType = new Field<>(LENGTH_HANDLE_TYPE, 0);
-    this.filler = new Field<>(LENGTH_FILLER, "");
+    this.stockAccountNumber = new Field<>(LENGTH_STOCK_ACCOUNT_NUMBER, niwmDto.getStockAccountNumber());
+    this.availableAmount = new Field<>(LENGTH_AVAILABLE_AMOUNT, niwmDto.getAvailableAmount());
+    this.requestedAmount = new Field<>(LENGTH_REQUESTED_AMOUNT, niwmDto.getRequestedAmount());
+    this.transferFee = new Field<>(LENGTH_TRANSFER_FEE, niwmDto.getTransferFee());
+    this.receiverBankCode = new Field<>(LENGTH_RECEIVER_CODE, niwmDto.getReceiverBankCode());
+    this.receiverBankAccountNumber = new Field<>(LENGTH_RECEIVER_ACCOUNT_NUMBER, niwmDto.getReceiverBankAccountNumber());
+    this.depositText = new Field<>(LENGTH_DEPOSIT_TEXT, niwmDto.getDepositText());
+    this.withdrawalText = new Field<>(LENGTH_WITHDRAWAL_TEXT, niwmDto.getWithdrawalText());
+    this.memberCompanyTranDate = new Field<>(LENGTH_MEMBER_COMPANY_TRAN_DATE, niwmDto.getMemberCompanyTranDate());
+    this.memberCompanyAccountNumber = new Field<>(LENGTH_MEMBER_COMPANY_ACCOUNT_NUMBER, niwmDto.getMemberCompanyAccountNumber());
+    this.memberCompanyTranId = new Field<>(LENGTH_MEMBER_COMPANY_TRAN_ID, niwmDto.getMemberCompanyTranId());
+    this.memberCompanyCancelTranId = new Field<>(LENGTH_MEMBER_COMPANY_CANCEL_TRAN_ID, niwmDto.getMemberCompanyCancelTranId());
+    this.handleType = new Field<>(LENGTH_HANDLE_TYPE, niwmDto.getHandleType());
+    this.filler = new Field<>(LENGTH_FILLER, niwmDto.getFiller());
 
     addField(this.stockAccountNumber);
     addField(this.availableAmount);

@@ -1,6 +1,8 @@
 package com.SOU.mockServer.external.controller;
 
 import com.SOU.mockServer.common.message.CommonMessageRequestDto;
+import com.SOU.mockServer.common.message.NotificationIndividualWithdrawalMessageDto;
+import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
 import com.SOU.mockServer.external.service.TcpService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,13 +30,24 @@ public class MessageTestController {
 
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "공통정보부 테스트 성공", content = @Content(schema = @Schema(implementation = CommonFieldMessage.class))),
-        @ApiResponse(responseCode = "400", description = "알맞지 않은 message 구조", content = @Content(schema = @Schema(implementation = String.class)))
+        @ApiResponse(responseCode = "400", description = "알맞지 않은 message 구조", content = @Content(schema = @Schema(implementation = Exception.class)))
     })
     @Operation(summary = "공통정보부 테스트", description = "공통정보부에 대한 tcp socket 테스트를 진행합니다.")
     @PostMapping("/common-message")
     public ResponseEntity<CommonFieldMessage> commonMessage(
-        @RequestBody CommonMessageRequestDto commonMessageDto) throws IOException {
+        @Valid @RequestBody CommonMessageRequestDto commonMessageDto) throws IOException {
         return ResponseEntity.ok(tcpService.commonFieldMessage(commonMessageDto));
     }
 
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "개인 회원 출금 요청 전문 테스트 성공", content = @Content(schema = @Schema(implementation = NotificationIndividualWithdrawalMessage.class))),
+        @ApiResponse(responseCode = "400", description = "알맞지 않은 message 구조", content = @Content(schema = @Schema(implementation = Exception.class)))
+    })
+    @Operation(summary = "개인 회원 출금 요청 전문 테스트", description = "개인 회원 출금 요청 전문에 대한 tcp socket 테스트를 진행합니다.")
+    @PostMapping("/notification-individual-withdrawal-message")
+    public ResponseEntity<NotificationIndividualWithdrawalMessage> NotificationIndividualWithdrawalMessage(
+        @Valid @RequestBody NotificationIndividualWithdrawalMessageDto messageDto)
+        throws Exception {
+        return ResponseEntity.ok(tcpService.notificationIndividualWithdrawalMessage(messageDto));
+    }
 }

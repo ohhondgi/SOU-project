@@ -6,5 +6,4 @@ public class ExceededMaxMessageLengthException extends IOException {
     public ExceededMaxMessageLengthException(String message) {
         super(message);
     }
-
 }
