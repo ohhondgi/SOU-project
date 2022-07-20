@@ -61,15 +61,10 @@ public class OnlineMessageSerializer implements Serializer<Message> {
 
     public void doSerialize(byte[] bytes, OutputStream outputStream) throws IOException {
 //        writeLengthHeader(outputStream, bytes.length); // header inclusive
-        log.info("bytes length = " + bytes.length +" bytes write = {}", bytesConverter.toString(bytes));
+        log.info("bytes length = " + bytes.length + " bytes write = {}",
+            bytesConverter.toString(bytes));
         outputStream.write(bytes); // body part
         outputStream.flush();
     }
-
-//    private void writeLengthHeader(OutputStream outputStream, int length) throws IOException {
-//        byte[] lengthPart = new byte[lengthHeaderSize];
-//        bytesConverter.fromInt(length, lengthPart, 0, lengthHeaderSize);
-//        outputStream.write(lengthPart); // header
-//    }
 
 }

@@ -22,18 +22,4 @@ public class SwaggerConfig {
             .info(info);
 
     }
-
-//    @Bean
-//    public Docket api2() {
-//        return new Docket(DocumentationType.OAS_30)
-//            .useDefaultResponseMessages(false)
-//            .select()
-//            .apis(RequestHandlerSelectors.basePackage("com.SOU.mockServer.external.controller"))
-//            .paths(PathSelectors.any())
-//            .build()
-//            .apiInfo(new ApiInfoBuilder().title("TCP mock server Swagger")
-//                .description("specification")
-//                .version("1.0")
-//                .build());
-//    }
 }

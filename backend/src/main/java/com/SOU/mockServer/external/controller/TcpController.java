@@ -1,20 +1,12 @@
 package com.SOU.mockServer.external.controller;
 
-import com.SOU.mockServer.common.message.Message;
 import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
-import com.SOU.mockServer.external.service.TcpService;
-import java.io.IOException;
-import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.annotation.Transformer;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 // inbound 요청을 서비스 계층 호출로 변환, 서비스 계층의 처리 후 반환 값을 아웃바운드 응답으로 변환하는 하나의 layer
 // pipe & filter architecture 의 filter 에 해당
@@ -22,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @MessageEndpoint
 @Component
 public class TcpController {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(TcpController.class);
 
     @ServiceActivator(inputChannel = "CommonMessageChannel", outputChannel = "outboundChannel")
@@ -32,7 +25,8 @@ public class TcpController {
     }
 
     @ServiceActivator(inputChannel = "NotificationIndividualWithdrawalMessageChannel", outputChannel = "outboundChannel")
-    public NotificationIndividualWithdrawalMessage handleNotificationIndividualWithdrawalMessage(NotificationIndividualWithdrawalMessage msg) {
+    public NotificationIndividualWithdrawalMessage handleNotificationIndividualWithdrawalMessage(
+        NotificationIndividualWithdrawalMessage msg) {
         LOGGER.debug("Arrive NotificationIndividualWithdrawalMessage at Controller");
         // 추후 NotificationIndividualWithdrawalMessage logic에 대한 처리 가능
         return msg;

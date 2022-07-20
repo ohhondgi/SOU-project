@@ -234,12 +234,12 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
         }
 
         if (messageLength > maxMessageSize) {
-          throw new ExceededMaxMessageLengthException("Message length " + messageLength +
-                  " exceeds max message length = " + maxMessageSize);
+            throw new ExceededMaxMessageLengthException("Message length " + messageLength +
+                " exceeds max message length = " + maxMessageSize);
         }
 
         byte[] totalMessage = new byte[messageLength];
-        System.arraycopy(lengthPart,0,totalMessage,0,lengthPart.length);
+        System.arraycopy(lengthPart, 0, totalMessage, 0, lengthPart.length);
 
         return totalMessage;
     }

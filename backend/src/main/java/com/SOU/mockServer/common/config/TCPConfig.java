@@ -76,7 +76,9 @@ public class TCPConfig {
     }
 
     @Bean
-    public MessageChannel outboundChannel() { return new DirectChannel(); }
+    public MessageChannel outboundChannel() {
+        return new DirectChannel();
+    }
 
     @Bean
     public MessageChannel errorChannel() {
