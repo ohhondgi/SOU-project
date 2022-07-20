@@ -1,71 +1,110 @@
 package com.SOU.mockServer;
 
+import static com.SOU.mockServer.external.message.BankTranTypeCode.CONNECTION_STATE;
+import static com.SOU.mockServer.external.message.BankTranTypeCode.INDIVIDUAL_WITHDRAWAL;
+import static com.SOU.mockServer.external.message.BankTranTypeCode.NOTIFICATION_CREATE_INDIVIDUAL_ACCOUNT;
+import static com.SOU.mockServer.external.message.Constants.RECEIVER_CODE;
+import static com.SOU.mockServer.external.message.Constants.SENDER_CODE;
+import static com.SOU.mockServer.external.message.ResponseCode.SUCCESS;
+
+import com.SOU.mockServer.common.config.TCPConfig;
+import com.SOU.mockServer.common.message.Message;
+import com.SOU.mockServer.common.util.bytes.ByteArrayOutput;
+import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
+import com.SOU.mockServer.external.message.common.CommonFieldMessage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.util.Arrays;
 import javax.net.SocketFactory;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.core.MessagingTemplate;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.support.MessageBuilder;
 
 @SpringBootTest
 class MockServerApplicationTests {
-	private static final Logger LOGGER = LoggerFactory.getLogger(MockServerApplicationTests.class);
 
-	//server host, port
-	private static final String HOST = "localhost";
-	private static final int PORT = 1234;
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockServerApplicationTests.class);
 
-	public static void main(String[] args) throws Exception {
+    //server host, port
+    private static final String HOST = "localhost";
+    private static final int PORT = 1234;
 
-		String DATA = "hello_from_client";
-		LOGGER.info("Sending request to {}:{}", HOST, PORT);
-		// create client socket && connect server socket
-		Socket socket = SocketFactory.getDefault().createSocket(HOST, PORT);
+    @Test
+    public void CommonFieldMessageTest() throws IOException {
+        Socket socket = new Socket(HOST, PORT);
 
-		// ByteArrayCrLfSerializer의 message 구분 방식은 \r\n 으로 구분
-		socket.getOutputStream().write((DATA + "\r\n").getBytes());
+        CommonFieldMessage message = new CommonFieldMessage(SENDER_CODE,RECEIVER_CODE,
+            "1234567890",NOTIFICATION_CREATE_INDIVIDUAL_ACCOUNT,CONNECTION_STATE,SUCCESS,"filtertest");
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		String response = reader.readLine();
-		LOGGER.info("Received response: {}", response);
-	}
+        // when
+        ByteArrayOutput outputStream = new ByteArrayOutput(message.getTotalLength());
+        message.writeTo(outputStream);
 
-//	@Test
-//	void test_send_sensor_status() throws IOException {
-//		MessagingTemplate messagingTemplate = new MessagingTemplate(this.inboundChannel);
-//
-//		byte[] bytes = {0x02, 0x10, 0x11, 0x01, 0x01, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, (byte) 0xCF, (byte) 0xEC, 0x03};
-//		Message<byte[]> message = MessageBuilder.withPayload(bytes).build();
-//		Message<?> receive = messagingTemplate.sendAndReceive(message);
-//
-//		byte[] response = new byte[0];
-//
-//		Assertions.assertTrue(Arrays.equals((byte[]) receive.getPayload(), response));
-//		Socket socket = new Socket("localhost", 1234);
-//		OutputStream output = socket.getOutputStream();
-//
-//		byte[] data = {0x02, 0x10, 0x11, 0x01, 0x01, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, (byte) 0xCF, (byte) 0xEC, 0x03};
-//		output.write(data);
-//
-//		socket.close();
-//	}
+        socket.getOutputStream().write(outputStream.toData());
 
-	@Test
-	void contextLoads() {
+        //then
+        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String response = reader.readLine();
+        socket.close();
+        LOGGER.info("Client Socket Sending request to {}:{}", "localhost", 1234);
+        LOGGER.info("Client Socket Received response: {}", response);
+    }
 
-	}
+    @Test
+    public void NotificationIndividualWithdrawalMessageTest() throws IOException {
+        Socket socket = new Socket(HOST, PORT);
+
+//        NotificationIndividualWithdrawalMessage message = new NotificationIndividualWithdrawalMessage();
+//        message.getCommonFieldMessage().getTranTypeCode().set(INDIVIDUAL_WITHDRAWAL);
+
+        NotificationIndividualWithdrawalMessage message = new NotificationIndividualWithdrawalMessage();
+        message.getCommonFieldMessage().getTranTypeCode().set(INDIVIDUAL_WITHDRAWAL);
+
+        // when
+        ByteArrayOutput outputStream = new ByteArrayOutput(message.getTotalLength());
+        message.writeTo(outputStream);
+
+        socket.getOutputStream().write(outputStream.toData());
+
+        //then
+        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String response = reader.readLine();
+        socket.close();
+        LOGGER.info("Client Socket Sending request to {}:{}", "localhost", 1234);
+        LOGGER.info("Client Socket Received response: {}", response);
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        LOGGER.info("Sending request to {}:{}", HOST, PORT);
+        Socket socket = SocketFactory.getDefault().createSocket(HOST, PORT);
+
+        // test message 생성
+//        CommonFieldMessage message = new CommonFieldMessage(SENDER_CODE,RECEIVER_CODE,
+//            "1234567890",NOTIFICATION_CREATE_INDIVIDUAL_ACCOUNT,INDIVIDUAL_WITHDRAWAL,SUCCESS,"filtertest");
+
+        // 공통 정보부에 대한 test message 생성
+        CommonFieldMessage message = new CommonFieldMessage(SENDER_CODE,RECEIVER_CODE,
+            "1234567890",NOTIFICATION_CREATE_INDIVIDUAL_ACCOUNT,CONNECTION_STATE,SUCCESS,"filtertest");
+
+        ByteArrayOutput outputStream = new ByteArrayOutput(message.getTotalLength());
+        message.writeTo(outputStream);
+
+        socket.getOutputStream().write(outputStream.toData());
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String response = reader.readLine();
+        socket.close();
+        LOGGER.info("Received response: {}", response);
+    }
 
 }
