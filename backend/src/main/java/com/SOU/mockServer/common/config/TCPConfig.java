@@ -42,12 +42,16 @@ public class TCPConfig {
         serverCF.setSerializer(
             new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage));
+
+//        serverCF.setSoTimeout(1000);
+        // 각 socket 요청에 대한 connection을 새로 생성, false일 경우 하나의 connection을 공유하고,
+        // 이때 요청을 처리하는 상태일 경우, 다른 process의 request는 block되므로.
         serverCF.setSingleUse(true);
-        serverCF.setSoTcpNoDelay(true);
+
+        // server와 client의 session 요청을 유지
         serverCF.setSoKeepAlive(true);
         return serverCF;
     }
-
 
     @Bean
     public TcpInboundGateway tcpInboundGateway() {
