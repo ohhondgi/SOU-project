@@ -34,19 +34,21 @@ public class TCPConfig {
     private String host;
 
     @Bean
+    public OnlineMessageSerializer serializer() {
+        return new OnlineMessageSerializer(maxMessageSize);
+    }
+
+    @Bean
     public AbstractServerConnectionFactory serverConnectionFactory() {
         TcpNetServerConnectionFactory serverCF = new TcpNetServerConnectionFactory(this.port);
         serverCF.setDeserializer(
             new OnlineMessageDeserializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage));
-        serverCF.setSerializer(
-            new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
-                treatTimeoutAsEndOfMessage));
-
-//        serverCF.setSoTimeout(1000);
-        // 각 socket 요청에 대한 connection을 새로 생성, false일 경우 하나의 connection을 공유하고,
-        // 이때 요청을 처리하는 상태일 경우, 다른 process의 request는 block되므로.
-        serverCF.setSingleUse(true);
+        serverCF.setSerializer(serializer());
+        serverCF.setSoTimeout(1000);
+        // 각 socket 요청에 대한 connection을 새로 생성하고, 응답 후 connection close.
+        // 만약 false일 경우, 하나의 connection을 공유하므로 이때 요청을 처리하는 상태일 경우, 다른 process의 request는 block.
+//        serverCF.setSingleUse(true);
 
         // server와 client의 session 요청을 유지
         serverCF.setSoKeepAlive(true);
@@ -58,7 +60,6 @@ public class TCPConfig {
         TcpInboundGateway inGate = new TcpInboundGateway();
         inGate.setConnectionFactory(serverConnectionFactory());
         inGate.setRequestChannel(inboundChannel());
-        inGate.setReplyChannel(outboundChannel());
         inGate.setErrorChannel(errorChannel());
         return inGate;
     }
@@ -76,11 +77,6 @@ public class TCPConfig {
 
     @Bean
     public MessageChannel inboundChannel() {
-        return new DirectChannel();
-    }
-
-    @Bean
-    public MessageChannel outboundChannel() {
         return new DirectChannel();
     }
 

@@ -1,72 +1,35 @@
 package com.SOU.mockServer.external.service;
 
-import com.SOU.mockServer.common.message.CommonMessageRequestDto;
-import com.SOU.mockServer.common.message.NotificationIndividualWithdrawalMessageDto;
-import com.SOU.mockServer.common.util.Input;
-import com.SOU.mockServer.common.util.bytes.ByteArrayInput;
-import com.SOU.mockServer.common.util.bytes.ByteArrayOutput;
-import com.SOU.mockServer.common.util.bytes.BytesConverter;
-import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
-import com.SOU.mockServer.external.message.common.CommonFieldMessage;
+import com.SOU.mockServer.common.message.Message;
+import com.SOU.mockServer.external.serialize.OnlineMessageSerializer;
 import java.io.IOException;
 import java.net.Socket;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class TcpService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TcpService.class);
-    private final BytesConverter bytesConverter = new BytesConverter();
-    //server host, port
-    @Value("${tcp.server.host}")
+
+    @Value("${tcp.vpn.server.host}")
     private String HOST;
-    @Value("${tcp.server.port}")
+    @Value("${tcp.vpn.server.port}")
     private Integer PORT;
 
-    public CommonFieldMessage commonFieldMessage(CommonMessageRequestDto commonMessageDto)
-        throws IOException {
-        // create client socket
+    private final OnlineMessageSerializer onlineMessageSerializer;
+
+    public void replyMessage(Message message) throws IOException {
         Socket socket = new Socket(HOST, PORT);
-        CommonFieldMessage message = commonMessageDto.of();
 
-        ByteArrayOutput outputStream = new ByteArrayOutput(message.getTotalLength());
-        message.writeTo(outputStream);
-
-        socket.getOutputStream().write(outputStream.toData());
-
-        Input in = new ByteArrayInput(socket.getInputStream().readAllBytes(), bytesConverter);
-        CommonFieldMessage resultMessage = new CommonFieldMessage();
-        resultMessage.readFrom(in);
+        onlineMessageSerializer.serialize(message, socket.getOutputStream());
+        LOGGER.debug("send message for VPN server");
 
         socket.close();
-        LOGGER.info("Client Socket Sending request to {}:{}", "localhost", 1234);
-        LOGGER.info("Client Socket Received response: {}", resultMessage.toString());
-        return resultMessage;
     }
 
-    public NotificationIndividualWithdrawalMessage notificationIndividualWithdrawalMessage(
-        NotificationIndividualWithdrawalMessageDto niwmDto) throws IOException {
-        Socket socket = new Socket(HOST, PORT);
-        NotificationIndividualWithdrawalMessage message = new NotificationIndividualWithdrawalMessage(
-            niwmDto.getCommonFiledMessage().of(), niwmDto);
-
-        ByteArrayOutput outputStream = new ByteArrayOutput(message.getTotalLength());
-        message.writeTo(outputStream);
-        socket.getOutputStream().write(outputStream.toData());
-
-        Input in = new ByteArrayInput(socket.getInputStream().readAllBytes(), bytesConverter);
-        NotificationIndividualWithdrawalMessage resultMessage = new NotificationIndividualWithdrawalMessage();
-        resultMessage.readFrom(in);
-
-        socket.close();
-        LOGGER.info("Client Socket Sending request to {}:{}", "localhost", 1234);
-        LOGGER.info("Client Socket Received response: {}", resultMessage.toString());
-
-        return resultMessage;
-    }
 }

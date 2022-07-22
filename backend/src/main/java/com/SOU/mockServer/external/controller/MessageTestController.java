@@ -4,7 +4,7 @@ import com.SOU.mockServer.common.message.CommonMessageRequestDto;
 import com.SOU.mockServer.common.message.NotificationIndividualWithdrawalMessageDto;
 import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
-import com.SOU.mockServer.external.service.TcpService;
+import com.SOU.mockServer.external.service.MessageTestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/test")
 public class MessageTestController {
 
-    private final TcpService tcpService;
+    private final MessageTestService messageTestService;
 
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "공통정보부 테스트 성공", content = @Content(schema = @Schema(implementation = CommonFieldMessage.class))),
@@ -36,7 +36,7 @@ public class MessageTestController {
     @PostMapping("/common-message")
     public ResponseEntity<CommonFieldMessage> commonMessage(
         @Valid @RequestBody CommonMessageRequestDto commonMessageDto) throws IOException {
-        return ResponseEntity.ok(tcpService.commonFieldMessage(commonMessageDto));
+        return ResponseEntity.ok(messageTestService.commonFieldMessage(commonMessageDto));
     }
 
     @ApiResponses(value = {
@@ -48,6 +48,6 @@ public class MessageTestController {
     public ResponseEntity<NotificationIndividualWithdrawalMessage> NotificationIndividualWithdrawalMessage(
         @Valid @RequestBody NotificationIndividualWithdrawalMessageDto messageDto)
         throws Exception {
-        return ResponseEntity.ok(tcpService.notificationIndividualWithdrawalMessage(messageDto));
+        return ResponseEntity.ok(messageTestService.notificationIndividualWithdrawalMessage(messageDto));
     }
 }

@@ -2,9 +2,13 @@ package com.SOU.mockServer.external.controller;
 
 import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
+import com.SOU.mockServer.external.service.TcpService;
+import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.annotation.MessageEndpoint;
+import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.annotation.Transformer;
 import org.springframework.stereotype.Component;
 
@@ -13,24 +17,31 @@ import org.springframework.stereotype.Component;
 // test flow에서 사용할 수 있는 여러 POJO(plain old java object) method 제공가능
 @MessageEndpoint
 @Component
+@RequiredArgsConstructor
 public class TcpController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TcpController.class);
+    private final TcpService tcpService;
 
-    @Transformer(inputChannel = "CommonMessageChannel", outputChannel = "outboundChannel")
-    public CommonFieldMessage handleCommonFieldMessage(CommonFieldMessage msg) {
+    @ServiceActivator(inputChannel = "CommonMessageChannel")
+    public void handleCommonFieldMessage(CommonFieldMessage msg) throws IOException {
         LOGGER.debug("Arrive CommonMessage at Controller");
         // 추후 Common message logic에 대한 처리 가능
-        return msg;
+
+        // create client socket and sending message for VPN server
+//        tcpService.replyCommonMessage(msg);
+        tcpService.replyMessage(msg);
     }
 
-
-    @Transformer(inputChannel = "NotificationIndividualWithdrawalMessageChannel", outputChannel = "outboundChannel")
-    public NotificationIndividualWithdrawalMessage handleNotificationIndividualWithdrawalMessage(
-        NotificationIndividualWithdrawalMessage msg) {
+    @ServiceActivator(inputChannel = "NotificationIndividualWithdrawalMessageChannel")
+    public void handleNotificationIndividualWithdrawalMessage(
+        NotificationIndividualWithdrawalMessage msg) throws IOException {
         LOGGER.debug("Arrive NotificationIndividualWithdrawalMessage at Controller");
         // 추후 NotificationIndividualWithdrawalMessage logic에 대한 처리 가능
-        return msg;
+
+        // create client socket and sending message for VPN server
+//        tcpService.replyNotificationIndividualWithdrawalMessage(msg);
+        tcpService.replyMessage(msg);
     }
 
 }
