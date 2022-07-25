@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import javax.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,11 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "전문 Test", description = "전문 Test를 위해 Client socket을 활용하여 test하는 API입니다.")
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/test")
 public class MessageTestController {
 
     private final MessageTestService messageTestService;
+
+    public MessageTestController(
+        MessageTestService messageTestService) {
+        this.messageTestService = messageTestService;
+    }
 
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "공통정보부 테스트 성공", content = @Content(schema = @Schema(implementation = CommonFieldMessage.class))),
@@ -48,6 +51,7 @@ public class MessageTestController {
     public ResponseEntity<NotificationIndividualWithdrawalMessage> NotificationIndividualWithdrawalMessage(
         @Valid @RequestBody NotificationIndividualWithdrawalMessageDto messageDto)
         throws Exception {
-        return ResponseEntity.ok(messageTestService.notificationIndividualWithdrawalMessage(messageDto));
+        return ResponseEntity.ok(
+            messageTestService.notificationIndividualWithdrawalMessage(messageDto));
     }
 }

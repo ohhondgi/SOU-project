@@ -8,13 +8,25 @@ import com.SOU.mockServer.external.serialize.OnlineMessageSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.Router;
+import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.config.EnableIntegration;
+import org.springframework.integration.config.annotation.InboundChannelAdapterAnnotationPostProcessor;
+import org.springframework.integration.ip.config.TcpInboundChannelAdapterParser;
+import org.springframework.integration.ip.config.TcpInboundGatewayParser;
+import org.springframework.integration.ip.dsl.TcpInboundChannelAdapterSpec;
 import org.springframework.integration.ip.tcp.TcpInboundGateway;
+import org.springframework.integration.ip.tcp.TcpOutboundGateway;
+import org.springframework.integration.ip.tcp.connection.AbstractClientConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.AbstractServerConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.TcpNetServerConnectionFactory;
+import org.springframework.integration.ip.tcp.connection.TcpNioClientConnectionFactory;
+import org.springframework.integration.ip.tcp.connection.TcpNioServerConnectionFactory;
+import org.springframework.integration.ip.tcp.connection.ThreadAffinityClientConnectionFactory;
+import org.springframework.integration.ip.tcp.serializer.ByteArrayCrLfSerializer;
 import org.springframework.integration.router.PayloadTypeRouter;
 import org.springframework.messaging.MessageChannel;
 
@@ -29,29 +41,31 @@ public class TCPConfig {
     private final int lengthHeaderSize = 4;
 
     @Value("${tcp.server.port}")
-    private int port;
+    private int PORT;
     @Value("${tcp.server.host}")
-    private String host;
+    private String HOST;
 
-    @Bean
-    public OnlineMessageSerializer serializer() {
-        return new OnlineMessageSerializer(maxMessageSize);
-    }
+    @Value("${tcp.vpn.server.host}")
+    private String VPNHOST;
+    @Value("${tcp.vpn.server.port}")
+    private Integer VPNPORT;
+
 
     @Bean
     public AbstractServerConnectionFactory serverConnectionFactory() {
-        TcpNetServerConnectionFactory serverCF = new TcpNetServerConnectionFactory(this.port);
+//        TcpNetServerConnectionFactory serverCF = new TcpNetServerConnectionFactory(this.PORT);
+        TcpNioServerConnectionFactory serverCF = new TcpNioServerConnectionFactory(this.PORT);
         serverCF.setDeserializer(
             new OnlineMessageDeserializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage));
-        serverCF.setSerializer(serializer());
-        serverCF.setSoTimeout(1000);
-        // 각 socket 요청에 대한 connection을 새로 생성하고, 응답 후 connection close.
-        // 만약 false일 경우, 하나의 connection을 공유하므로 이때 요청을 처리하는 상태일 경우, 다른 process의 request는 block.
-//        serverCF.setSingleUse(true);
+        serverCF.setSerializer(
+            new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
+                treatTimeoutAsEndOfMessage)
+        );
+        serverCF.setBacklog(10);
 
         // server와 client의 session 요청을 유지
-        serverCF.setSoKeepAlive(true);
+//        serverCF.setSoKeepAlive(true);
         return serverCF;
     }
 
@@ -60,15 +74,53 @@ public class TCPConfig {
         TcpInboundGateway inGate = new TcpInboundGateway();
         inGate.setConnectionFactory(serverConnectionFactory());
         inGate.setRequestChannel(inboundChannel());
-        inGate.setErrorChannel(errorChannel());
+        inGate.setLoggingEnabled(true);
         return inGate;
+    }
+
+    public AbstractClientConnectionFactory clientConnectionFactory() {
+        // reply message time out error 가 Nio(Non-blocking I/O)의 내부 경쟁조건에 의해 무시됨.
+        TcpNioClientConnectionFactory clientCF = new TcpNioClientConnectionFactory(VPNHOST,
+            VPNPORT);
+        clientCF.setDeserializer(
+            new OnlineMessageDeserializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
+                treatTimeoutAsEndOfMessage)
+        );
+        clientCF.setSerializer(
+            new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
+                treatTimeoutAsEndOfMessage)
+        );
+        // 하나의 connection 을 공유하여 사용
+        clientCF.setSingleUse(true);
+        return clientCF;
+    }
+
+    @Bean
+    public ThreadAffinityClientConnectionFactory tacf() {
+        return new ThreadAffinityClientConnectionFactory(clientConnectionFactory());
+    }
+
+    @Bean
+    @ServiceActivator(inputChannel = "messageChannel")
+    public TcpOutboundGateway tcpOutboundGateway() {
+        TcpOutboundGateway outGate = new TcpOutboundGateway();
+        outGate.setConnectionFactory(tacf());
+        outGate.setConnectionFactory(clientConnectionFactory());
+        outGate.setOutputChannel(outboundChannel());
+        outGate.setRemoteTimeout(0);
+        outGate.setLoggingEnabled(true);
+
+
+        // reply message 를 기다리지 않고 outputChannel 로 message 전송
+        outGate.setAsync(true);
+        return outGate;
     }
 
     @Router(inputChannel = "inboundChannel")
     @Bean
     public PayloadTypeRouter router() {
         PayloadTypeRouter router = new PayloadTypeRouter();
-        // 각 전문 channel 로 전송
+        // 전문 type에 따라 각 전문에 해당하는 channel 로 전송
         router.setChannelMapping(CommonFieldMessage.class.getName(), "CommonMessageChannel");
         router.setChannelMapping(NotificationIndividualWithdrawalMessage.class.getName(),
             "NotificationIndividualWithdrawalMessageChannel");
@@ -77,12 +129,22 @@ public class TCPConfig {
 
     @Bean
     public MessageChannel inboundChannel() {
-        return new DirectChannel();
+        DirectChannel channel = new DirectChannel();
+        channel.setLoggingEnabled(true);
+        return channel;
     }
 
     @Bean
-    public MessageChannel errorChannel() {
-        return new DirectChannel();
+    public MessageChannel outboundChannel() {
+        DirectChannel channel = new DirectChannel();
+        channel.setLoggingEnabled(true);
+        return channel;
     }
 
+    @Bean
+    public MessageChannel messageChannel() {
+        DirectChannel channel = new DirectChannel();
+        channel.setLoggingEnabled(true);
+        return channel;
+    }
 }

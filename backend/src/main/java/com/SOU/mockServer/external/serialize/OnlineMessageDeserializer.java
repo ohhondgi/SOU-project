@@ -1,11 +1,13 @@
 package com.SOU.mockServer.external.serialize;
 
+import com.SOU.mockServer.common.exception.DummyMessageException;
 import com.SOU.mockServer.common.exception.ExceededMaxMessageLengthException;
 import com.SOU.mockServer.common.exception.IllegalLengthHeaderException;
 import com.SOU.mockServer.common.message.Message;
 import com.SOU.mockServer.common.util.Input;
 import com.SOU.mockServer.common.util.bytes.ByteArrayInput;
 import com.SOU.mockServer.common.util.bytes.BytesConverter;
+import com.SOU.mockServer.external.controller.TcpController;
 import com.SOU.mockServer.external.message.BankTranTypeCode;
 import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
@@ -13,6 +15,8 @@ import com.sun.jdi.connect.spi.ClosedConnectionException;
 import java.io.IOException;
 import java.io.InputStream;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.serializer.Deserializer;
 
 /**
@@ -23,6 +27,7 @@ import org.springframework.core.serializer.Deserializer;
 @Slf4j
 public class OnlineMessageDeserializer implements Deserializer<Message> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OnlineMessageDeserializer.class);
     private static final int SIZE_LENGTH_HEADER = 4; // size of length header
     private static final int OFFSET_BANK_TRAN_TYPE_CODE = 38;
     private static final int LENGTH_BANK_TRAN_TYPE_CODE = 4;
@@ -189,6 +194,8 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
     }
 
     public byte[] doDeserialize(InputStream inputStream) throws IOException {
+        int available = inputStream.available();
+        log.info("Available to read: " + available);
         byte[] message = read(inputStream);
 
         log.info("bytes length = {}, bytes read = {}", message.length,
@@ -219,6 +226,8 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
 
     private byte[] readLengthHeader(InputStream inputStream) throws IOException {
         byte[] lengthPart = new byte[lengthHeaderSize];
+        if (inputStream.available() == 0)
+            throw new DummyMessageException(" Dummy Message is received");
         inputStream.read(lengthPart, 0, lengthPart.length);
         int messageLength = -1;
 

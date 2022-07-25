@@ -10,33 +10,23 @@ import com.SOU.mockServer.common.util.bytes.BytesConverter;
 import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
-import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-@NoArgsConstructor
 public class MessageTestService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageTestService.class);
     private final BytesConverter bytesConverter = new BytesConverter();
-    //server host, port
-    @Value("${tcp.server.host}")
-    private String HOST;
-    @Value("${tcp.server.port}")
-    private Integer PORT;
 
-    @Value("${tcp.vpn.server.host}")
-    private String VPNHOST;
-    @Value("${tcp.vpn.server.port}")
-    private Integer VPNPORT;
+    private final SocketService socketService;
 
+    public MessageTestService(SocketService socketService) {
+        this.socketService = socketService;
+    }
 
     public CommonFieldMessage commonFieldMessage(CommonMessageRequestDto commonMessageDto)
         throws IOException {
@@ -71,20 +61,25 @@ public class MessageTestService {
 
     public Input sendAndReceive(Message message) throws IOException {
 
-        // create client socket
-        Socket socket = new Socket(HOST, PORT);
+        Socket clientSocket = socketService.getClientSocket();
         ByteArrayOutput outputStream = new ByteArrayOutput(message.getTotalLength());
         message.writeTo(outputStream);
-        socket.getOutputStream().write(outputStream.toData());
-        socket.close();
+        clientSocket.getOutputStream().write(outputStream.toData());
+        clientSocket.getOutputStream().flush();
+//        clientSocket.close();
 
         // create server socket
-        ServerSocket serverSocket = new ServerSocket();
-        SocketAddress serverSocketAddress = new InetSocketAddress(VPNHOST, VPNPORT);
-        serverSocket.bind(serverSocketAddress, 5);
+        ServerSocket serverSocket = socketService.getServerSocket();
         Socket receivedSocket = serverSocket.accept();
-        serverSocket.close();
 
-        return new ByteArrayInput(receivedSocket.getInputStream().readAllBytes(), bytesConverter);
+//        Input in = new ByteArrayInput(receivedSocket.getInputStream().readAllBytes(),
+//            bytesConverter);
+        Input in = new ByteArrayInput(
+            receivedSocket.getInputStream().readNBytes(message.getTotalLength()),
+            bytesConverter);
+//        receivedSocket.getInputStream().close();
+//        serverSocket.close();
+
+        return in;
     }
 }
