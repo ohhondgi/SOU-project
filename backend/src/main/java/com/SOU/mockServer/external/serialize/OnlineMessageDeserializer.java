@@ -192,8 +192,6 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
     }
 
     public byte[] doDeserialize(InputStream inputStream) throws IOException {
-        int available = inputStream.available();
-        log.info("Available to read: " + available);
         byte[] message = read(inputStream);
 
         log.info("bytes length = {}, bytes read = {}", message.length,
@@ -224,8 +222,6 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
 
     private byte[] readLengthHeader(InputStream inputStream) throws IOException {
         byte[] lengthPart = new byte[lengthHeaderSize];
-//        if (inputStream.available() == 0)
-//            throw new DummyMessageException(" Dummy Message is received");
         inputStream.read(lengthPart, 0, lengthPart.length);
         int messageLength = -1;
 

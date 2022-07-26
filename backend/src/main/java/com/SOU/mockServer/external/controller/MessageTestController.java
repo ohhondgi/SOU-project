@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.IOException;
 import javax.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,8 +37,14 @@ public class MessageTestController {
     @Operation(summary = "공통정보부 테스트", description = "공통정보부에 대한 tcp socket 테스트를 진행합니다.")
     @PostMapping("/common-message")
     public ResponseEntity<CommonFieldMessage> commonMessage(
-        @Valid @RequestBody CommonMessageRequestDto commonMessageDto) throws IOException {
+        @Valid @RequestBody CommonMessageRequestDto commonMessageDto) {
         return ResponseEntity.ok(messageTestService.commonFieldMessage(commonMessageDto));
+    }
+
+    @PostMapping("/test")
+    public ResponseEntity<Object> MessageTest(
+        @Valid @RequestBody CommonMessageRequestDto commonMessageDto) {
+        return ResponseEntity.ok(messageTestService.MessageTest(commonMessageDto));
     }
 
     @ApiResponses(value = {
@@ -53,5 +58,6 @@ public class MessageTestController {
         return ResponseEntity.ok(
             messageTestService.notificationIndividualWithdrawalMessage(messageDto));
     }
+
 
 }

@@ -12,6 +12,8 @@ import com.SOU.mockServer.external.message.common.CommonFieldMessage;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.LinkedList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -28,6 +30,20 @@ public class MessageTestService {
 
     public MessageTestService(SocketService socketService) {
         this.socketService = socketService;
+    }
+
+    public Object MessageTest(CommonMessageRequestDto commonMessageDto){
+        List<Message> messageLinkedList = new LinkedList<>();
+        for (int i = 0; i< 10000; i++){
+            CommonFieldMessage message = commonMessageDto.of();
+
+            Input in = sendAndReceive(message);
+
+            CommonFieldMessage resultMessage = new CommonFieldMessage();
+            resultMessage.readFrom(in);
+            messageLinkedList.add(resultMessage);
+        }
+        return messageLinkedList.size();
     }
 
     public CommonFieldMessage commonFieldMessage(CommonMessageRequestDto commonMessageDto) {
