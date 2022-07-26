@@ -17,7 +17,7 @@ import org.springframework.integration.ip.tcp.TcpInboundGateway;
 import org.springframework.integration.ip.tcp.TcpOutboundGateway;
 import org.springframework.integration.ip.tcp.connection.AbstractClientConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.AbstractServerConnectionFactory;
-import org.springframework.integration.ip.tcp.connection.TcpNioClientConnectionFactory;
+import org.springframework.integration.ip.tcp.connection.TcpNetClientConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.TcpNioServerConnectionFactory;
 import org.springframework.integration.router.PayloadTypeRouter;
 import org.springframework.messaging.MessageChannel;
@@ -44,19 +44,13 @@ public class TCPConfig {
 
     @Bean
     public AbstractServerConnectionFactory serverConnectionFactory() {
-//        TcpNetServerConnectionFactory serverCF = new TcpNetServerConnectionFactory(this.PORT);
+        // reply message time out error 가 Nio(Non-blocking I/O)의 내부 경쟁조건에 의해 무시됨.
         TcpNioServerConnectionFactory serverCF = new TcpNioServerConnectionFactory(this.PORT);
         serverCF.setDeserializer(
             new OnlineMessageDeserializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage));
-        serverCF.setSerializer(
-            new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
-                treatTimeoutAsEndOfMessage)
-        );
-        serverCF.setBacklog(15);
+        serverCF.setBacklog(10);
 
-        // server와 client의 session 요청을 유지
-        serverCF.setSoKeepAlive(true);
         return serverCF;
     }
 
@@ -65,6 +59,7 @@ public class TCPConfig {
         TcpInboundGateway inGate = new TcpInboundGateway();
         inGate.setConnectionFactory(serverConnectionFactory());
         inGate.setRequestChannel(inboundChannel());
+        inGate.setReplyTimeout(0);
         inGate.setLoggingEnabled(true);
         return inGate;
     }
@@ -72,15 +67,8 @@ public class TCPConfig {
     @Bean
     public AbstractClientConnectionFactory clientConnectionFactory() {
         // reply message time out error 가 Nio(Non-blocking I/O)의 내부 경쟁조건에 의해 무시됨.
-//        TcpNetClientConnectionFactory clientCF = new TcpNetClientConnectionFactory(VPNHOST,
-//            VPNPORT);
-        TcpNioClientConnectionFactory clientCF = new TcpNioClientConnectionFactory(VPNHOST,
+        TcpNetClientConnectionFactory clientCF = new TcpNetClientConnectionFactory(VPNHOST,
             VPNPORT);
-//        clientCF.setLeaveOpen(true);
-        clientCF.setDeserializer(
-            new OnlineMessageDeserializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
-                treatTimeoutAsEndOfMessage)
-        );
         clientCF.setSerializer(
             new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage)
@@ -90,23 +78,16 @@ public class TCPConfig {
         return clientCF;
     }
 
-//    @Bean
-//    public ThreadAffinityClientConnectionFactory tacf() {
-//        return new ThreadAffinityClientConnectionFactory(clientConnectionFactory());
-//    }
-
     @Bean
     @ServiceActivator(inputChannel = "messageChannel")
-//    public TcpOutboundGateway tcpOutboundGateway(ThreadAffinityClientConnectionFactory tacf) {
     public TcpOutboundGateway tcpOutboundGateway() {
         TcpOutboundGateway outGate = new TcpOutboundGateway();
-//        outGate.setConnectionFactory(tacf);
         outGate.setConnectionFactory(clientConnectionFactory());
         outGate.setOutputChannel(outboundChannel());
-        outGate.setRemoteTimeout(0);
-        outGate.setLoggingEnabled(true);
 
-        // reply message 를 기다리지 않고 outputChannel 로 message 전송
+        // Ignore that reply message is timeout
+        outGate.setRemoteTimeout(0);
+        // 비동기 처리를 통해 reply message 를 기다리지 않고 outputChannel 로 message 전송
         outGate.setAsync(true);
         return outGate;
     }
