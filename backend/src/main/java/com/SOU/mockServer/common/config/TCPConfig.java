@@ -8,25 +8,17 @@ import com.SOU.mockServer.external.serialize.OnlineMessageSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.config.EnableIntegration;
-import org.springframework.integration.config.annotation.InboundChannelAdapterAnnotationPostProcessor;
-import org.springframework.integration.ip.config.TcpInboundChannelAdapterParser;
-import org.springframework.integration.ip.config.TcpInboundGatewayParser;
-import org.springframework.integration.ip.dsl.TcpInboundChannelAdapterSpec;
 import org.springframework.integration.ip.tcp.TcpInboundGateway;
 import org.springframework.integration.ip.tcp.TcpOutboundGateway;
 import org.springframework.integration.ip.tcp.connection.AbstractClientConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.AbstractServerConnectionFactory;
-import org.springframework.integration.ip.tcp.connection.TcpNetServerConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.TcpNioClientConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.TcpNioServerConnectionFactory;
-import org.springframework.integration.ip.tcp.connection.ThreadAffinityClientConnectionFactory;
-import org.springframework.integration.ip.tcp.serializer.ByteArrayCrLfSerializer;
 import org.springframework.integration.router.PayloadTypeRouter;
 import org.springframework.messaging.MessageChannel;
 
@@ -50,7 +42,6 @@ public class TCPConfig {
     @Value("${tcp.vpn.server.port}")
     private Integer VPNPORT;
 
-
     @Bean
     public AbstractServerConnectionFactory serverConnectionFactory() {
 //        TcpNetServerConnectionFactory serverCF = new TcpNetServerConnectionFactory(this.PORT);
@@ -62,10 +53,10 @@ public class TCPConfig {
             new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage)
         );
-        serverCF.setBacklog(10);
+        serverCF.setBacklog(15);
 
         // server와 client의 session 요청을 유지
-//        serverCF.setSoKeepAlive(true);
+        serverCF.setSoKeepAlive(true);
         return serverCF;
     }
 
@@ -78,10 +69,14 @@ public class TCPConfig {
         return inGate;
     }
 
+    @Bean
     public AbstractClientConnectionFactory clientConnectionFactory() {
         // reply message time out error 가 Nio(Non-blocking I/O)의 내부 경쟁조건에 의해 무시됨.
+//        TcpNetClientConnectionFactory clientCF = new TcpNetClientConnectionFactory(VPNHOST,
+//            VPNPORT);
         TcpNioClientConnectionFactory clientCF = new TcpNioClientConnectionFactory(VPNHOST,
             VPNPORT);
+//        clientCF.setLeaveOpen(true);
         clientCF.setDeserializer(
             new OnlineMessageDeserializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage)
@@ -95,21 +90,21 @@ public class TCPConfig {
         return clientCF;
     }
 
-    @Bean
-    public ThreadAffinityClientConnectionFactory tacf() {
-        return new ThreadAffinityClientConnectionFactory(clientConnectionFactory());
-    }
+//    @Bean
+//    public ThreadAffinityClientConnectionFactory tacf() {
+//        return new ThreadAffinityClientConnectionFactory(clientConnectionFactory());
+//    }
 
     @Bean
     @ServiceActivator(inputChannel = "messageChannel")
+//    public TcpOutboundGateway tcpOutboundGateway(ThreadAffinityClientConnectionFactory tacf) {
     public TcpOutboundGateway tcpOutboundGateway() {
         TcpOutboundGateway outGate = new TcpOutboundGateway();
-        outGate.setConnectionFactory(tacf());
+//        outGate.setConnectionFactory(tacf);
         outGate.setConnectionFactory(clientConnectionFactory());
         outGate.setOutputChannel(outboundChannel());
         outGate.setRemoteTimeout(0);
         outGate.setLoggingEnabled(true);
-
 
         // reply message 를 기다리지 않고 outputChannel 로 message 전송
         outGate.setAsync(true);
@@ -147,4 +142,19 @@ public class TCPConfig {
         channel.setLoggingEnabled(true);
         return channel;
     }
+
+    @Bean
+    public MessageChannel errorChannel() {
+        DirectChannel channel = new DirectChannel();
+        channel.setLoggingEnabled(true);
+        return channel;
+    }
+
+    @Bean
+    public MessageChannel replyChannel() {
+        DirectChannel channel = new DirectChannel();
+        channel.setLoggingEnabled(true);
+        return channel;
+    }
+
 }
