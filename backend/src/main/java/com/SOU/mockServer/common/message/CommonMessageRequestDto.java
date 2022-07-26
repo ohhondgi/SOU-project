@@ -33,7 +33,7 @@ public class CommonMessageRequestDto {
     @NotEmpty
     private String messageCategoryCode;
 
-    @Schema(description = "거래 구분 코드", maxLength = 4, defaultValue = "0010")
+    @Schema(description = "거래 구분 코드", maxLength = 4, defaultValue = "0000")
     @JsonProperty(index = 5)
     @NotEmpty
     private String tranTypeCode;
@@ -46,7 +46,7 @@ public class CommonMessageRequestDto {
     @JsonProperty(index = 7)
     private String filler;
 
-    public CommonFieldMessage of(){
+    public CommonFieldMessage of() {
         return new CommonFieldMessage(
             this.getSenderCode(),
             this.getReceiverCode(),

@@ -1,13 +1,11 @@
 package com.SOU.mockServer.external.serialize;
 
-import com.SOU.mockServer.common.exception.DummyMessageException;
 import com.SOU.mockServer.common.exception.ExceededMaxMessageLengthException;
 import com.SOU.mockServer.common.exception.IllegalLengthHeaderException;
 import com.SOU.mockServer.common.message.Message;
 import com.SOU.mockServer.common.util.Input;
 import com.SOU.mockServer.common.util.bytes.ByteArrayInput;
 import com.SOU.mockServer.common.util.bytes.BytesConverter;
-import com.SOU.mockServer.external.controller.TcpController;
 import com.SOU.mockServer.external.message.BankTranTypeCode;
 import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
@@ -226,8 +224,8 @@ public class OnlineMessageDeserializer implements Deserializer<Message> {
 
     private byte[] readLengthHeader(InputStream inputStream) throws IOException {
         byte[] lengthPart = new byte[lengthHeaderSize];
-        if (inputStream.available() == 0)
-            throw new DummyMessageException(" Dummy Message is received");
+//        if (inputStream.available() == 0)
+//            throw new DummyMessageException(" Dummy Message is received");
         inputStream.read(lengthPart, 0, lengthPart.length);
         int messageLength = -1;
 

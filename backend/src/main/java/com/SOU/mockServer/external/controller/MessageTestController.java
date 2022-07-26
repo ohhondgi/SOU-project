@@ -49,9 +49,9 @@ public class MessageTestController {
     @Operation(summary = "개인 회원 출금 요청 전문 테스트", description = "개인 회원 출금 요청 전문에 대한 tcp socket 테스트를 진행합니다.")
     @PostMapping("/notification-individual-withdrawal-message")
     public ResponseEntity<NotificationIndividualWithdrawalMessage> NotificationIndividualWithdrawalMessage(
-        @Valid @RequestBody NotificationIndividualWithdrawalMessageDto messageDto)
-        throws Exception {
+        @Valid @RequestBody NotificationIndividualWithdrawalMessageDto messageDto) {
         return ResponseEntity.ok(
             messageTestService.notificationIndividualWithdrawalMessage(messageDto));
     }
+
 }

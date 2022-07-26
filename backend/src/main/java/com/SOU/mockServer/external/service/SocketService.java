@@ -5,15 +5,13 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 @Component
 @Lazy
-public class SocketService{
+public class SocketService {
 
     private static Socket clientSocket;
     private static ServerSocket serverSocket;
@@ -29,15 +27,16 @@ public class SocketService{
     private Integer VPNPORT;
 
     public Socket getClientSocket() throws IOException {
-        if (this.clientSocket == null){
+        if (this.clientSocket == null) {
             this.clientSocket = new Socket(HOST, PORT);
         }
-            return this.clientSocket;
+        return this.clientSocket;
     }
 
     public ServerSocket getServerSocket() throws IOException {
-        if (this.serverSocket == null){
+        if (this.serverSocket == null) {
             this.serverSocket = new ServerSocket();
+            this.serverSocket.setSoTimeout(2000);
             SocketAddress serverSocketAddress = new InetSocketAddress(VPNHOST, VPNPORT);
             serverSocket.bind(serverSocketAddress, 5);
         }

@@ -14,7 +14,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class MessageTestService {
@@ -28,8 +30,7 @@ public class MessageTestService {
         this.socketService = socketService;
     }
 
-    public CommonFieldMessage commonFieldMessage(CommonMessageRequestDto commonMessageDto)
-        throws IOException {
+    public CommonFieldMessage commonFieldMessage(CommonMessageRequestDto commonMessageDto) {
         // create client socket
         CommonFieldMessage message = commonMessageDto.of();
 
@@ -44,7 +45,7 @@ public class MessageTestService {
     }
 
     public NotificationIndividualWithdrawalMessage notificationIndividualWithdrawalMessage(
-        NotificationIndividualWithdrawalMessageDto niwmDto) throws IOException {
+        NotificationIndividualWithdrawalMessageDto niwmDto) {
         NotificationIndividualWithdrawalMessage message = new NotificationIndividualWithdrawalMessage(
             niwmDto.getCommonFiledMessage().of(), niwmDto);
 
@@ -55,31 +56,34 @@ public class MessageTestService {
 
         LOGGER.info("Client Socket Sending request to {}:{}", "localhost", 1234);
         LOGGER.info("Client Socket Received response: {}", resultMessage.toString());
-
         return resultMessage;
     }
 
-    public Input sendAndReceive(Message message) throws IOException {
+    public Input sendAndReceive(Message message) {
+        try {
+            Socket clientSocket = socketService.getClientSocket();
+            ByteArrayOutput outputStream = new ByteArrayOutput(message.getTotalLength());
+            message.writeTo(outputStream);
+            clientSocket.getOutputStream().write(outputStream.toData());
+            clientSocket.getOutputStream().flush();
+//            clientSocket.close();
 
-        Socket clientSocket = socketService.getClientSocket();
-        ByteArrayOutput outputStream = new ByteArrayOutput(message.getTotalLength());
-        message.writeTo(outputStream);
-        clientSocket.getOutputStream().write(outputStream.toData());
-        clientSocket.getOutputStream().flush();
-//        clientSocket.close();
+            // create server socket
+            ServerSocket serverSocket = socketService.getServerSocket();
+            Socket receivedSocket = serverSocket.accept();
 
-        // create server socket
-        ServerSocket serverSocket = socketService.getServerSocket();
-        Socket receivedSocket = serverSocket.accept();
+//            Input in = new ByteArrayInput(receivedSocket.getInputStream().readAllBytes(),
+//                bytesConverter);
+            Input in = new ByteArrayInput(
+                receivedSocket.getInputStream().readNBytes(message.getTotalLength()),
+                bytesConverter);
 
-//        Input in = new ByteArrayInput(receivedSocket.getInputStream().readAllBytes(),
-//            bytesConverter);
-        Input in = new ByteArrayInput(
-            receivedSocket.getInputStream().readNBytes(message.getTotalLength()),
-            bytesConverter);
-//        receivedSocket.getInputStream().close();
-//        serverSocket.close();
-
-        return in;
+//            receivedSocket.getInputStream().close();
+//            serverSocket.close();
+            return in;
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT,
+                "Socket " + e.getMessage());
+        }
     }
 }
