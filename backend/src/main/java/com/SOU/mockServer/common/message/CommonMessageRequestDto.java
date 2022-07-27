@@ -33,7 +33,7 @@ public class CommonMessageRequestDto {
     @NotEmpty
     private String messageCategoryCode;
 
-    @Schema(description = "거래 구분 코드", maxLength = 4, defaultValue = "0000")
+    @Schema(description = "거래 구분 코드", maxLength = 4, defaultValue = "0010")
     @JsonProperty(index = 5)
     @NotEmpty
     private String tranTypeCode;

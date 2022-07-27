@@ -27,20 +27,28 @@ public class SocketService {
     private Integer VPNPORT;
 
     public Socket getClientSocket() throws IOException {
-        if (this.clientSocket == null) {
-            this.clientSocket = new Socket(HOST, PORT);
+        if (this.clientSocket == null || this.clientSocket.isClosed()) {
+            setClientSocket();
         }
         return this.clientSocket;
     }
 
     public ServerSocket getServerSocket() throws IOException {
-        if (this.serverSocket == null) {
-            this.serverSocket = new ServerSocket();
-            this.serverSocket.setSoTimeout(2000);
-            SocketAddress serverSocketAddress = new InetSocketAddress(VPNHOST, VPNPORT);
-            serverSocket.bind(serverSocketAddress, 5);
+        if (this.serverSocket == null || this.serverSocket.isClosed()) {
+            setServerSocket();
         }
         return this.serverSocket;
+    }
+
+    public void setServerSocket() throws IOException {
+        serverSocket = new ServerSocket();
+        serverSocket.setSoTimeout(5000);
+        SocketAddress serverSocketAddress = new InetSocketAddress(VPNHOST, VPNPORT);
+        serverSocket.bind(serverSocketAddress, 5);
+    }
+
+    public void setClientSocket() throws IOException {
+        this.clientSocket = new Socket(HOST, PORT);
     }
 
 }
