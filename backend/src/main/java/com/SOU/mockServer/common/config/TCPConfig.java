@@ -12,6 +12,7 @@ import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.channel.QueueChannel;
 import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.ip.tcp.TcpInboundGateway;
 import org.springframework.integration.ip.tcp.TcpOutboundGateway;
@@ -59,6 +60,7 @@ public class TCPConfig {
         TcpInboundGateway inGate = new TcpInboundGateway();
         inGate.setConnectionFactory(serverConnectionFactory());
         inGate.setRequestChannel(inboundChannel());
+        inGate.setErrorOnTimeout(false);
         inGate.setReplyTimeout(0);
         inGate.setLoggingEnabled(true);
         return inGate;
@@ -66,7 +68,6 @@ public class TCPConfig {
 
     @Bean
     public AbstractClientConnectionFactory clientConnectionFactory() {
-        // reply message time out error 가 Nio(Non-blocking I/O)의 내부 경쟁조건에 의해 무시됨.
         TcpNetClientConnectionFactory clientCF = new TcpNetClientConnectionFactory(VPNHOST,
             VPNPORT);
         clientCF.setSerializer(
@@ -111,17 +112,17 @@ public class TCPConfig {
     }
 
     @Bean
-    public MessageChannel outboundChannel() {
+    public MessageChannel messageChannel() {
         DirectChannel channel = new DirectChannel();
         channel.setLoggingEnabled(true);
         return channel;
     }
 
     @Bean
-    public MessageChannel messageChannel() {
-        DirectChannel channel = new DirectChannel();
-        channel.setLoggingEnabled(true);
-        return channel;
+    public MessageChannel outboundChannel() {
+        QueueChannel queueChannel = new QueueChannel();
+        queueChannel.setLoggingEnabled(true);
+        return queueChannel;
     }
 
     @Bean
