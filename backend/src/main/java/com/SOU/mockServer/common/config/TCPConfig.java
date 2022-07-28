@@ -18,7 +18,7 @@ import org.springframework.integration.ip.tcp.TcpInboundGateway;
 import org.springframework.integration.ip.tcp.TcpOutboundGateway;
 import org.springframework.integration.ip.tcp.connection.AbstractClientConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.AbstractServerConnectionFactory;
-import org.springframework.integration.ip.tcp.connection.TcpNetClientConnectionFactory;
+import org.springframework.integration.ip.tcp.connection.TcpNioClientConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.TcpNioServerConnectionFactory;
 import org.springframework.integration.router.PayloadTypeRouter;
 import org.springframework.messaging.MessageChannel;
@@ -50,7 +50,11 @@ public class TCPConfig {
         serverCF.setDeserializer(
             new OnlineMessageDeserializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage));
+        // Socket 을 수신할 때, 대기시킬 수 있는 Socket 의 개수
         serverCF.setBacklog(10);
+
+        // 해당 옵션을 사용하여 여러 Socket 을 한 번에 수신 가능
+//        serverCF.setSingleUse(true);
 
         return serverCF;
     }
@@ -60,21 +64,23 @@ public class TCPConfig {
         TcpInboundGateway inGate = new TcpInboundGateway();
         inGate.setConnectionFactory(serverConnectionFactory());
         inGate.setRequestChannel(inboundChannel());
-        inGate.setErrorOnTimeout(false);
+        inGate.setErrorChannel(errorChannel());
+
+        // 단방향 gateway 구현을 위해 reply message를 기다리지 않음
         inGate.setReplyTimeout(0);
+
         inGate.setLoggingEnabled(true);
         return inGate;
     }
 
     @Bean
     public AbstractClientConnectionFactory clientConnectionFactory() {
-        TcpNetClientConnectionFactory clientCF = new TcpNetClientConnectionFactory(VPNHOST,
+        TcpNioClientConnectionFactory clientCF = new TcpNioClientConnectionFactory(VPNHOST,
             VPNPORT);
         clientCF.setSerializer(
             new OnlineMessageSerializer(maxMessageSize, lengthHeaderSize, new BytesConverter(),
                 treatTimeoutAsEndOfMessage)
         );
-        // 하나의 connection 을 공유하여 사용
         clientCF.setSingleUse(true);
         return clientCF;
     }
@@ -90,6 +96,7 @@ public class TCPConfig {
         outGate.setRemoteTimeout(0);
         // 비동기 처리를 통해 reply message 를 기다리지 않고 outputChannel 로 message 전송
         outGate.setAsync(true);
+
         return outGate;
     }
 
@@ -112,28 +119,14 @@ public class TCPConfig {
     }
 
     @Bean
-    public MessageChannel messageChannel() {
-        DirectChannel channel = new DirectChannel();
+    public MessageChannel outboundChannel() {
+        QueueChannel channel = new QueueChannel();
         channel.setLoggingEnabled(true);
         return channel;
-    }
-
-    @Bean
-    public MessageChannel outboundChannel() {
-        QueueChannel queueChannel = new QueueChannel();
-        queueChannel.setLoggingEnabled(true);
-        return queueChannel;
     }
 
     @Bean
     public MessageChannel errorChannel() {
-        DirectChannel channel = new DirectChannel();
-        channel.setLoggingEnabled(true);
-        return channel;
-    }
-
-    @Bean
-    public MessageChannel replyChannel() {
         DirectChannel channel = new DirectChannel();
         channel.setLoggingEnabled(true);
         return channel;

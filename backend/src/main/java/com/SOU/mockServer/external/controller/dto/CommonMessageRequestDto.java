@@ -1,4 +1,4 @@
-package com.SOU.mockServer.common.message;
+package com.SOU.mockServer.external.controller.dto;
 
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
