@@ -1,12 +1,12 @@
 package com.SOU.mockServer.external.service;
 
-import com.SOU.mockServer.common.message.CommonMessageRequestDto;
 import com.SOU.mockServer.common.message.Message;
-import com.SOU.mockServer.common.message.NotificationIndividualWithdrawalMessageDto;
 import com.SOU.mockServer.common.util.Input;
 import com.SOU.mockServer.common.util.bytes.ByteArrayInput;
 import com.SOU.mockServer.common.util.bytes.ByteArrayOutput;
 import com.SOU.mockServer.common.util.bytes.BytesConverter;
+import com.SOU.mockServer.external.controller.dto.CommonMessageRequestDto;
+import com.SOU.mockServer.external.controller.dto.NotificationIndividualWithdrawalMessageDto;
 import com.SOU.mockServer.external.message.account.NotificationIndividualWithdrawalMessage;
 import com.SOU.mockServer.external.message.common.CommonFieldMessage;
 import java.io.IOException;
@@ -32,9 +32,9 @@ public class MessageTestService {
         this.socketService = socketService;
     }
 
-    public Object MessageTest(CommonMessageRequestDto commonMessageDto){
+    public Object MassiveMessageTest(CommonMessageRequestDto commonMessageDto, int messageNumber) {
         List<Message> messageLinkedList = new LinkedList<>();
-        for (int i = 0; i< 10000; i++){
+        for (int i = 0; i < messageNumber; i++) {
             CommonFieldMessage message = commonMessageDto.of();
 
             Input in = sendAndReceive(message);
@@ -47,7 +47,6 @@ public class MessageTestService {
     }
 
     public CommonFieldMessage commonFieldMessage(CommonMessageRequestDto commonMessageDto) {
-        // create client socket
         CommonFieldMessage message = commonMessageDto.of();
 
         Input in = sendAndReceive(message);
@@ -82,20 +81,14 @@ public class MessageTestService {
             message.writeTo(outputStream);
             clientSocket.getOutputStream().write(outputStream.toData());
             clientSocket.getOutputStream().flush();
-//            clientSocket.close();
 
-            // create server socket
             ServerSocket serverSocket = socketService.getServerSocket();
             Socket receivedSocket = serverSocket.accept();
 
-//            Input in = new ByteArrayInput(receivedSocket.getInputStream().readAllBytes(),
-//                bytesConverter);
             Input in = new ByteArrayInput(
                 receivedSocket.getInputStream().readNBytes(message.getTotalLength()),
                 bytesConverter);
 
-//            receivedSocket.getInputStream().close();
-//            serverSocket.close();
             return in;
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT,
