@@ -23,11 +23,11 @@ import org.springframework.web.server.ResponseStatusException;
 @Tag(name = "전문 Test", description = "전문 Test를 위해 Client socket을 활용하여 test하는 API입니다.")
 @RestController
 @RequestMapping("/test")
-public class MessageTestController {
+public class MessageController {
 
     private final MessageTestService messageTestService;
 
-    public MessageTestController(
+    public MessageController(
         MessageTestService messageTestService) {
         this.messageTestService = messageTestService;
     }
